@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>学径 — 选择学习方向</title>
+<link rel="stylesheet" href="../css/tokens.css" />
+<style>
+  body { background: var(--bg); }
+  .select-page {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  .select-header {
+    text-align: center;
+    padding: var(--sp-16) var(--sp-6) var(--sp-8);
+  }
+  .step-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sp-2);
+    margin-bottom: var(--sp-8);
+  }
+  .step-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--border);
+  }
+  .step-dot.active { background: var(--primary); width: 28px; border-radius: var(--r-full); }
+  .step-dot.done { background: var(--secondary); }
+
+  .select-title {
+    font-family: var(--font-display);
+    font-size: var(--text-3xl);
+    font-weight: 700;
+    color: var(--fg);
+    margin-bottom: var(--sp-3);
+    letter-spacing: -0.01em;
+  }
+  .select-desc {
+    font-size: var(--text-md);
+    color: var(--muted);
+    max-width: 480px;
+    margin: 0 auto;
+  }
+
+  .subject-grid {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 0 var(--sp-6) var(--sp-8);
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: var(--sp-4);
+    flex: 1;
+  }
+
+  .subject-card {
+    position: relative;
+    background: var(--surface);
+    border: 2px solid var(--border);
+    border-radius: var(--r-lg);
+    padding: var(--sp-6);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-3);
+  }
+  .subject-card:hover {
+    border-color: var(--primary);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+  }
+  .subject-card.selected {
+    border-color: var(--primary);
+    background: var(--primary-light);
+  }
+  .subject-card.selected .check-mark {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  .check-mark {
+    position: absolute;
+    top: var(--sp-3);
+    right: var(--sp-3);
+    width: 24px; height: 24px;
+    background: var(--primary);
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    color: white;
+    opacity: 0;
+    transform: scale(0.5);
+    transition: all 0.2s ease;
+  }
+
+  .subject-icon {
+    width: 44px; height: 44px;
+    border-radius: var(--r-md);
+    display: grid;
+    place-items: center;
+    font-size: 22px;
+  }
+  .si-blue { background: var(--primary-light); color: var(--primary); }
+  .si-green { background: var(--secondary-light); color: var(--secondary); }
+  .si-purple { background: var(--ai-light); color: var(--ai); }
+  .si-amber { background: var(--warning-light); color: oklch(50% 0.12 80); }
+
+  .subject-name {
+    font-weight: 600;
+    font-size: var(--text-md);
+    color: var(--fg);
+  }
+  .subject-count {
+    font-size: var(--text-xs);
+    color: var(--muted);
+  }
+
+  .select-footer {
+    position: sticky;
+    bottom: 0;
+    background: oklch(100% 0 0 / 0.9);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-top: 1px solid var(--border);
+    padding: var(--sp-4) var(--sp-6);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .selected-count {
+    font-size: var(--text-sm);
+    color: var(--muted);
+  }
+  .selected-count strong { color: var(--primary); font-weight: 600; }
+
+  @media (max-width: 600px) {
+    .select-header { padding: var(--sp-10) var(--sp-4) var(--sp-6); }
+    .select-title { font-size: var(--text-2xl); }
+    .subject-grid { grid-template-columns: 1fr; padding: 0 var(--sp-4) var(--sp-4); }
+  }
+</style>
+</head>
+<body>
+  <div class="select-page">
+    <div class="select-header">
+      <div class="step-indicator anim-fade-in">
+        <div class="step-dot active"></div>
+        <div class="step-dot"></div>
+        <div class="step-dot"></div>
+      </div>
+      <h1 class="select-title anim-fade-up anim-delay-1">选择你的学习方向</h1>
+      <p class="select-desc anim-fade-up anim-delay-2">选择你感兴趣的学科领域，支持多学科并行学习。我们将为你定制专属学习路径。</p>
+    </div>
+
+    <div class="subject-grid" id="subjectGrid">
+      <div class="subject-card anim-fade-up anim-delay-1" data-subject="ds" onclick="toggleSubject(this)">
+        <div class="check-mark"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div class="subject-icon si-blue">⊞</div>
+        <div class="subject-name">数据结构与算法</div>
+        <div class="subject-count">128 个知识点 · 45 个实践项目</div>
+      </div>
+
+      <div class="subject-card anim-fade-up anim-delay-2" data-subject="sec" onclick="toggleSubject(this)">
+        <div class="check-mark"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div class="subject-icon si-green">🛡</div>
+        <div class="subject-name">网络安全</div>
+        <div class="subject-count">96 个知识点 · 32 个实践项目</div>
+      </div>
+
+      <div class="subject-card anim-fade-up anim-delay-3" data-subject="ai" onclick="toggleSubject(this)">
+        <div class="check-mark"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div class="subject-icon si-purple">◈</div>
+        <div class="subject-name">人工智能</div>
+        <div class="subject-count">156 个知识点 · 58 个实践项目</div>
+      </div>
+
+      <div class="subject-card anim-fade-up anim-delay-4" data-subject="db" onclick="toggleSubject(this)">
+        <div class="check-mark"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div class="subject-icon si-amber">⊡</div>
+        <div class="subject-name">数据库系统</div>
+        <div class="subject-count">84 个知识点 · 28 个实践项目</div>
+      </div>
+
+      <div class="subject-card anim-fade-up anim-delay-5" data-subject="se" onclick="toggleSubject(this)">
+        <div class="check-mark"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div class="subject-icon si-blue">⚙</div>
+        <div class="subject-name">软件工程</div>
+        <div class="subject-count">112 个知识点 · 40 个实践项目</div>
+      </div>
+
+      <div class="subject-card anim-fade-up anim-delay-6" data-subject="cloud" onclick="toggleSubject(this)">
+        <div class="check-mark"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div class="subject-icon si-green">☁</div>
+        <div class="subject-name">云计算与容器技术</div>
+        <div class="subject-count">98 个知识点 · 35 个实践项目</div>
+      </div>
+
+      <div class="subject-card anim-fade-up anim-delay-5" data-subject="web" onclick="toggleSubject(this)">
+        <div class="check-mark"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div class="subject-icon si-purple">◇</div>
+        <div class="subject-name">Web 开发</div>
+        <div class="subject-count">134 个知识点 · 52 个实践项目</div>
+      </div>
+
+      <div class="subject-card anim-fade-up anim-delay-6" data-subject="bigdata" onclick="toggleSubject(this)">
+        <div class="check-mark"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div class="subject-icon si-amber">▦</div>
+        <div class="subject-name">大数据分析</div>
+        <div class="subject-count">108 个知识点 · 38 个实践项目</div>
+      </div>
+    </div>
+
+    <div class="select-footer">
+      <span class="selected-count">已选择 <strong id="selCount">0</strong> 个学科</span>
+      <a href="03-profile-build.html" class="btn btn-primary" id="nextBtn" style="opacity:0.5;pointer-events:none;">继续</a>
+    </div>
+  </div>
+
+  <script>
+    var selected = new Set();
+    function toggleSubject(el) {
+      var sub = el.getAttribute('data-subject');
+      if (selected.has(sub)) {
+        selected.delete(sub);
+        el.classList.remove('selected');
+      } else {
+        selected.add(sub);
+        el.classList.add('selected');
+      }
+      document.getElementById('selCount').textContent = selected.size;
+      var btn = document.getElementById('nextBtn');
+      if (selected.size > 0) {
+        btn.style.opacity = '1';
+        btn.style.pointerEvents = 'auto';
+      } else {
+        btn.style.opacity = '0.5';
+        btn.style.pointerEvents = 'none';
+      }
+    }
+  </script>
+</body>
+</html>

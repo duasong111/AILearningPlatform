@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "kind": "html",
+  "title": "学径 LearnPath — 登录 / 注册",
+  "entry": "learnpath-auth.html",
+  "renderer": "html",
+  "status": "complete",
+  "exports": [
+    "html",
+    "pdf",
+    "zip"
+  ],
+  "primary": true,
+  "createdAt": "2026-06-11T04:31:57.089Z",
+  "updatedAt": "2026-06-11T04:31:57.130Z",
+  "metadata": {
+    "identifier": "learnpath-auth",
+    "artifactType": "text/html",
+    "inferred": false
+  }
+}

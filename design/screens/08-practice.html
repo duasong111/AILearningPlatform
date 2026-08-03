@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>学径 — 刷题中心</title>
+<link rel="stylesheet" href="../css/tokens.css" />
+<style>
+  body { background: var(--bg); }
+  .page-wrap { min-height: 100vh; }
+  .page-body { padding: var(--sp-8) var(--sp-6); max-width: var(--content-max); margin: 0 auto; }
+
+  .page-header {
+    display: flex; align-items: flex-end; justify-content: space-between;
+    margin-bottom: var(--sp-8);
+  }
+  .page-header h1 { font-family: var(--font-display); font-size: var(--text-2xl); font-weight: 700; }
+  .page-header-sub { font-size: var(--text-sm); color: var(--muted); margin-top: var(--sp-1); }
+
+  /* Stats strip */
+  .practice-stats {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--sp-4);
+    margin-bottom: var(--sp-8);
+  }
+  .ps-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--r-lg); padding: var(--sp-5);
+  }
+  .ps-label { font-size: var(--text-xs); color: var(--muted); margin-bottom: var(--sp-1); }
+  .ps-value { font-weight: 700; font-size: var(--text-xl); font-variant-numeric: tabular-nums; }
+  .ps-bar { height: 4px; background: var(--border); border-radius: var(--r-full); margin-top: var(--sp-2); }
+  .ps-bar-fill { height: 100%; border-radius: var(--r-full); }
+
+  /* Layout: two columns */
+  .practice-layout {
+    display: grid; grid-template-columns: 1fr 400px; gap: var(--sp-6);
+  }
+
+  /* Question list */
+  .question-panel {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--r-lg); overflow: hidden;
+  }
+  .qp-header {
+    padding: var(--sp-4) var(--sp-5);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .qp-header h3 { font-size: var(--text-md); font-weight: 600; }
+  .qp-tabs {
+    display: flex; gap: var(--sp-1);
+    padding: var(--sp-2) var(--sp-5);
+    border-bottom: 1px solid var(--border);
+  }
+  .qp-tab {
+    padding: var(--sp-2) var(--sp-4);
+    font-size: var(--text-sm);
+    border-radius: var(--r-sm);
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .qp-tab:hover { color: var(--fg); background: var(--surface-alt); }
+  .qp-tab.active { background: var(--primary-light); color: var(--primary); font-weight: 500; }
+
+  .q-list { padding: var(--sp-3); }
+  .q-item {
+    padding: var(--sp-4);
+    border-radius: var(--r-md);
+    cursor: pointer;
+    transition: background 0.15s;
+    display: flex; align-items: flex-start; gap: var(--sp-3);
+    margin-bottom: 2px;
+  }
+  .q-item:hover { background: var(--surface-alt); }
+  .q-item.selected { background: var(--primary-light); }
+
+  .q-num {
+    width: 28px; height: 28px; border-radius: var(--r-sm);
+    display: grid; place-items: center;
+    font-size: var(--text-xs); font-weight: 600;
+    background: var(--surface-alt); color: var(--muted);
+    flex-shrink: 0;
+  }
+  .q-item.selected .q-num { background: var(--primary); color: white; }
+  .q-info { flex: 1; }
+  .q-title { font-size: var(--text-sm); font-weight: 500; color: var(--fg); margin-bottom: var(--sp-1); }
+  .q-tags { display: flex; gap: var(--sp-2); font-size: var(--text-xs); }
+  .q-tag { padding: 1px 6px; border-radius: var(--r-full); }
+  .q-diff-easy { background: var(--success-light); color: var(--success); }
+  .q-diff-med { background: var(--warning-light); color: oklch(45% 0.12 80); }
+  .q-diff-hard { background: var(--danger-light); color: var(--danger); }
+
+  /* Active question */
+  .question-active {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--r-lg); padding: var(--sp-6);
+    display: flex; flex-direction: column; gap: var(--sp-5);
+  }
+  .qa-header {
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .qa-num { font-weight: 600; color: var(--primary); font-size: var(--text-sm); }
+  .qa-diff { font-size: var(--text-xs); }
+
+  .qa-body {
+    font-size: var(--text-base);
+    line-height: 1.8;
+    color: var(--fg);
+  }
+  .qa-body code {
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    background: var(--surface-alt);
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+  .qa-code-block {
+    background: oklch(18% 0.01 240);
+    border-radius: var(--r-md);
+    padding: var(--sp-4);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    line-height: 1.7;
+    color: oklch(90% 0.01 240);
+    white-space: pre;
+    overflow-x: auto;
+  }
+
+  /* Answer options */
+  .qa-options {
+    display: flex; flex-direction: column; gap: var(--sp-3);
+  }
+  .qa-option {
+    display: flex; align-items: flex-start; gap: var(--sp-3);
+    padding: var(--sp-3) var(--sp-4);
+    border: 1.5px solid var(--border);
+    border-radius: var(--r-md);
+    cursor: pointer;
+    transition: all 0.15s;
+    font-size: var(--text-base);
+  }
+  .qa-option:hover { border-color: var(--primary); background: var(--primary-light); }
+  .qa-option.selected { border-color: var(--primary); background: var(--primary-light); }
+  .qa-option.correct { border-color: var(--success); background: var(--success-light); }
+  .qa-option.wrong { border-color: var(--danger); background: var(--danger-light); }
+
+  .opt-marker {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    border: 2px solid var(--border-strong);
+    display: grid; place-items: center;
+    font-size: var(--text-xs); font-weight: 600;
+    flex-shrink: 0;
+    transition: all 0.15s;
+  }
+  .qa-option.selected .opt-marker { background: var(--primary); border-color: var(--primary); color: white; }
+  .qa-option.correct .opt-marker { background: var(--success); border-color: var(--success); color: white; }
+
+  .qa-actions {
+    display: flex; gap: var(--sp-3); justify-content: flex-end;
+    padding-top: var(--sp-4); border-top: 1px solid var(--border);
+  }
+
+  @media (max-width: 900px) {
+    .practice-layout { grid-template-columns: 1fr; }
+    .practice-stats { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+  <div id="nav-slot" data-active="practice"></div>
+  <div class="page-wrap">
+    <div class="page-body">
+      <div class="page-header anim-fade-up">
+        <div>
+          <h1>刷题中心</h1>
+          <div class="page-header-sub">人工智能 · 自适应练习 · AI 智能推荐薄弱知识点</div>
+        </div>
+        <div class="flex gap-3">
+          <button class="btn btn-secondary btn-sm">错题回顾</button>
+          <button class="btn btn-primary btn-sm">AI 推荐练习</button>
+        </div>
+      </div>
+
+      <div class="practice-stats anim-fade-up anim-delay-1">
+        <div class="ps-card">
+          <div class="ps-label">今日完成</div>
+          <div class="ps-value">18 题</div>
+          <div class="ps-bar"><div class="ps-bar-fill" style="width:60%;background:var(--primary)"></div></div>
+        </div>
+        <div class="ps-card">
+          <div class="ps-label">正确率</div>
+          <div class="ps-value">82%</div>
+          <div class="ps-bar"><div class="ps-bar-fill" style="width:82%;background:var(--secondary)"></div></div>
+        </div>
+        <div class="ps-card">
+          <div class="ps-label">累计刷题</div>
+          <div class="ps-value">347 题</div>
+        </div>
+        <div class="ps-card">
+          <div class="ps-label">薄弱知识点</div>
+          <div class="ps-value" style="font-size:var(--text-base);color:var(--danger)">反向传播</div>
+        </div>
+      </div>
+
+      <div class="practice-layout">
+        <!-- Question list -->
+        <div class="question-panel anim-fade-up anim-delay-2">
+          <div class="qp-header">
+            <h3>梯度下降 · 专项练习</h3>
+            <span class="text-sm text-muted">10 题</span>
+          </div>
+          <div class="qp-tabs">
+            <div class="qp-tab active">全部</div>
+            <div class="qp-tab">未做</div>
+            <div class="qp-tab">错题</div>
+            <div class="qp-tab">收藏</div>
+          </div>
+          <div class="q-list">
+            <div class="q-item selected">
+              <div class="q-num">1</div>
+              <div class="q-info">
+                <div class="q-title">梯度下降中学习率 α 的作用是？</div>
+                <div class="q-tags"><span class="q-tag q-diff-easy">简单</span><span class="text-xs text-muted">概念题</span></div>
+              </div>
+            </div>
+            <div class="q-item">
+              <div class="q-num">2</div>
+              <div class="q-info">
+                <div class="q-title">批量梯度下降与随机梯度下降的主要区别</div>
+                <div class="q-tags"><span class="q-tag q-diff-med">中等</span><span class="text-xs text-muted">概念题</span></div>
+              </div>
+            </div>
+            <div class="q-item">
+              <div class="q-num">3</div>
+              <div class="q-info">
+                <div class="q-title">写出 Adam 优化器的参数更新公式</div>
+                <div class="q-tags"><span class="q-tag q-diff-hard">困难</span><span class="text-xs text-muted">公式题</span></div>
+              </div>
+            </div>
+            <div class="q-item">
+              <div class="q-num">4</div>
+              <div class="q-info">
+                <div class="q-title">Mini-batch 大小的选择对训练的影响</div>
+                <div class="q-tags"><span class="q-tag q-diff-med">中等</span><span class="text-xs text-muted">分析题</span></div>
+              </div>
+            </div>
+            <div class="q-item">
+              <div class="q-num">5</div>
+              <div class="q-info">
+                <div class="q-title">实现带 momentum 的 SGD 优化器</div>
+                <div class="q-tags"><span class="q-tag q-diff-hard">困难</span><span class="text-xs text-muted">编程题</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Active question -->
+        <div class="question-active anim-fade-up anim-delay-3">
+          <div class="qa-header">
+            <span class="qa-num">第 1 题 / 共 10 题</span>
+            <span class="qa-diff badge badge-success">简单</span>
+          </div>
+
+          <div class="qa-body">
+            在梯度下降法 <code>θ = θ - α · ∇J(θ)</code> 中，学习率 α 的主要作用是：
+          </div>
+
+          <div class="qa-options" id="options">
+            <div class="qa-option" onclick="selectOption(this, false)">
+              <div class="opt-marker">A</div>
+              <div>决定每次参数更新的步长大小</div>
+            </div>
+            <div class="qa-option" onclick="selectOption(this, false)">
+              <div class="opt-marker">B</div>
+              <div>控制训练数据的采样比例</div>
+            </div>
+            <div class="qa-option" onclick="selectOption(this, false)">
+              <div class="opt-marker">C</div>
+              <div>设置损失函数的正则化强度</div>
+            </div>
+            <div class="qa-option" onclick="selectOption(this, false)">
+              <div class="opt-marker">D</div>
+              <div>决定模型的网络层数</div>
+            </div>
+          </div>
+
+          <div class="qa-actions">
+            <button class="btn btn-ghost btn-sm">跳过</button>
+            <button class="btn btn-ghost btn-sm">提示</button>
+            <button class="btn btn-primary btn-sm" onclick="checkAnswer()">提交答案</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/nav.js"></script>
+  <script>
+    var selected = null;
+    function selectOption(el, isCorrect) {
+      document.querySelectorAll('.qa-option').forEach(o => o.classList.remove('selected'));
+      el.classList.add('selected');
+      selected = el;
+    }
+    function checkAnswer() {
+      if (!selected) return;
+      // First option (A) is correct
+      var options = document.querySelectorAll('.qa-option');
+      options[0].classList.add('correct');
+      if (selected !== options[0]) {
+        selected.classList.add('wrong');
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,689 @@
+{
+  "nodes": [
+    {
+      "id": "2",
+      "name": "\u6570\u7ec4",
+      "type": "structure",
+      "difficulty": 1
+    },
+    {
+      "id": "3",
+      "name": "\u94fe\u8868",
+      "type": "structure",
+      "difficulty": 1
+    },
+    {
+      "id": "4",
+      "name": "\u6808",
+      "type": "structure",
+      "difficulty": 1
+    },
+    {
+      "id": "5",
+      "name": "\u961f\u5217",
+      "type": "structure",
+      "difficulty": 1
+    },
+    {
+      "id": "6",
+      "name": "\u54c8\u5e0c\u8868",
+      "type": "structure",
+      "difficulty": 2
+    },
+    {
+      "id": "7",
+      "name": "\u5806",
+      "type": "structure",
+      "difficulty": 2
+    },
+    {
+      "id": "8",
+      "name": "\u6811",
+      "type": "structure",
+      "difficulty": 1
+    },
+    {
+      "id": "9",
+      "name": "\u4e8c\u53c9\u6811",
+      "type": "structure",
+      "difficulty": 1
+    },
+    {
+      "id": "10",
+      "name": "\u4e8c\u53c9\u641c\u7d22\u6811",
+      "type": "structure",
+      "difficulty": 2
+    },
+    {
+      "id": "11",
+      "name": "AVL\u6811",
+      "type": "structure",
+      "difficulty": 3
+    },
+    {
+      "id": "12",
+      "name": "\u7ea2\u9ed1\u6811",
+      "type": "structure",
+      "difficulty": 4
+    },
+    {
+      "id": "13",
+      "name": "Trie\u6811",
+      "type": "structure",
+      "difficulty": 3
+    },
+    {
+      "id": "14",
+      "name": "B\u6811",
+      "type": "structure",
+      "difficulty": 4
+    },
+    {
+      "id": "15",
+      "name": "B+\u6811",
+      "type": "structure",
+      "difficulty": 4
+    },
+    {
+      "id": "16",
+      "name": "\u56fe",
+      "type": "structure",
+      "difficulty": 2
+    },
+    {
+      "id": "17",
+      "name": "DFS",
+      "type": "algorithm",
+      "difficulty": 2
+    },
+    {
+      "id": "18",
+      "name": "BFS",
+      "type": "algorithm",
+      "difficulty": 2
+    },
+    {
+      "id": "19",
+      "name": "Dijkstra",
+      "type": "algorithm",
+      "difficulty": 4
+    },
+    {
+      "id": "20",
+      "name": "\u62d3\u6251\u6392\u5e8f",
+      "type": "algorithm",
+      "difficulty": 3
+    },
+    {
+      "id": "21",
+      "name": "\u4f18\u5148\u961f\u5217",
+      "type": "concept",
+      "difficulty": 2
+    },
+    {
+      "id": "22",
+      "name": "\u56de\u6eaf\u7b97\u6cd5",
+      "type": "concept",
+      "difficulty": 4
+    },
+    {
+      "id": "23",
+      "name": "\u52a8\u6001\u89c4\u5212",
+      "type": "concept",
+      "difficulty": 5
+    },
+    {
+      "id": "24",
+      "name": "\u65f6\u95f4\u590d\u6742\u5ea6",
+      "type": "concept",
+      "difficulty": 1
+    },
+    {
+      "id": "25",
+      "name": "\u7a7a\u95f4\u590d\u6742\u5ea6",
+      "type": "concept",
+      "difficulty": 1
+    },
+    {
+      "id": "26",
+      "name": "TreeMap",
+      "type": "application",
+      "difficulty": 3
+    },
+    {
+      "id": "27",
+      "name": "\u6570\u636e\u5e93\u7d22\u5f15",
+      "type": "application",
+      "difficulty": 3
+    },
+    {
+      "id": "28",
+      "name": "\u641c\u7d22\u5f15\u64ce",
+      "type": "application",
+      "difficulty": 3
+    },
+    {
+      "id": "29",
+      "name": "\u7f13\u5b58\u7cfb\u7edf",
+      "type": "application",
+      "difficulty": 3
+    },
+    {
+      "id": "30",
+      "name": "\u6700\u77ed\u8def\u5f84\u95ee\u9898",
+      "type": "application",
+      "difficulty": 3
+    },
+    {
+      "id": "31",
+      "name": "KMP\u7b97\u6cd5",
+      "type": "algorithm",
+      "difficulty": 3
+    },
+    {
+      "id": "32",
+      "name": "AC\u81ea\u52a8\u673a",
+      "type": "algorithm",
+      "difficulty": 5
+    },
+    {
+      "id": "33",
+      "name": "\u5b57\u7b26\u4e32\u54c8\u5e0c",
+      "type": "algorithm",
+      "difficulty": 2
+    },
+    {
+      "id": "34",
+      "name": "\u5f52\u5e76\u6392\u5e8f",
+      "type": "algorithm",
+      "difficulty": 2
+    },
+    {
+      "id": "35",
+      "name": "\u5feb\u901f\u6392\u5e8f",
+      "type": "algorithm",
+      "difficulty": 2
+    },
+    {
+      "id": "36",
+      "name": "\u5806\u6392\u5e8f",
+      "type": "algorithm",
+      "difficulty": 2
+    },
+    {
+      "id": "37",
+      "name": "\u8ba1\u6570\u6392\u5e8f",
+      "type": "algorithm",
+      "difficulty": 2
+    },
+    {
+      "id": "38",
+      "name": "\u6876\u6392\u5e8f",
+      "type": "algorithm",
+      "difficulty": 2
+    },
+    {
+      "id": "39",
+      "name": "\u57fa\u6570\u6392\u5e8f",
+      "type": "algorithm",
+      "difficulty": 3
+    },
+    {
+      "id": "40",
+      "name": "\u6392\u5e8f\u7a33\u5b9a\u6027",
+      "type": "concept",
+      "difficulty": 2
+    },
+    {
+      "id": "41",
+      "name": "\u5185\u90e8\u6392\u5e8f",
+      "type": "concept",
+      "difficulty": 1
+    },
+    {
+      "id": "42",
+      "name": "\u5916\u90e8\u6392\u5e8f",
+      "type": "concept",
+      "difficulty": 3
+    },
+    {
+      "id": "43",
+      "name": "\u5e76\u67e5\u96c6",
+      "type": "structure",
+      "difficulty": 3
+    },
+    {
+      "id": "44",
+      "name": "\u7ebf\u6bb5\u6811",
+      "type": "structure",
+      "difficulty": 4
+    },
+    {
+      "id": "45",
+      "name": "\u6811\u72b6\u6570\u7ec4",
+      "type": "structure",
+      "difficulty": 4
+    },
+    {
+      "id": "46",
+      "name": "\u8df3\u8868",
+      "type": "structure",
+      "difficulty": 3
+    },
+    {
+      "id": "47",
+      "name": "\u5e03\u9686\u8fc7\u6ee4\u5668",
+      "type": "structure",
+      "difficulty": 3
+    },
+    {
+      "id": "48",
+      "name": "Floyd\u7b97\u6cd5",
+      "type": "algorithm",
+      "difficulty": 3
+    },
+    {
+      "id": "49",
+      "name": "Prim\u7b97\u6cd5",
+      "type": "algorithm",
+      "difficulty": 3
+    },
+    {
+      "id": "50",
+      "name": "Kruskal\u7b97\u6cd5",
+      "type": "algorithm",
+      "difficulty": 3
+    },
+    {
+      "id": "51",
+      "name": "Tarjan\u7b97\u6cd5",
+      "type": "algorithm",
+      "difficulty": 5
+    },
+    {
+      "id": "52",
+      "name": "\u6700\u5927\u6d41",
+      "type": "algorithm",
+      "difficulty": 5
+    },
+    {
+      "id": "53",
+      "name": "\u9012\u5f52\u4e0e\u5206\u6cbb",
+      "type": "concept",
+      "difficulty": 2
+    },
+    {
+      "id": "54",
+      "name": "\u8d2a\u5fc3\u7b97\u6cd5",
+      "type": "concept",
+      "difficulty": 3
+    }
+  ],
+  "relations": [
+    {
+      "source": "8",
+      "target": "9",
+      "type": "contains"
+    },
+    {
+      "source": "9",
+      "target": "10",
+      "type": "contains"
+    },
+    {
+      "source": "10",
+      "target": "11",
+      "type": "contains"
+    },
+    {
+      "source": "10",
+      "target": "12",
+      "type": "contains"
+    },
+    {
+      "source": "8",
+      "target": "13",
+      "type": "contains"
+    },
+    {
+      "source": "8",
+      "target": "14",
+      "type": "contains"
+    },
+    {
+      "source": "14",
+      "target": "15",
+      "type": "contains"
+    },
+    {
+      "source": "17",
+      "target": "16",
+      "type": "used_in"
+    },
+    {
+      "source": "17",
+      "target": "8",
+      "type": "used_in"
+    },
+    {
+      "source": "17",
+      "target": "22",
+      "type": "related_to"
+    },
+    {
+      "source": "18",
+      "target": "16",
+      "type": "used_in"
+    },
+    {
+      "source": "18",
+      "target": "8",
+      "type": "used_in"
+    },
+    {
+      "source": "19",
+      "target": "16",
+      "type": "used_in"
+    },
+    {
+      "source": "19",
+      "target": "30",
+      "type": "solves"
+    },
+    {
+      "source": "20",
+      "target": "16",
+      "type": "used_in"
+    },
+    {
+      "source": "7",
+      "target": "21",
+      "type": "implements"
+    },
+    {
+      "source": "21",
+      "target": "7",
+      "type": "implemented_by"
+    },
+    {
+      "source": "12",
+      "target": "26",
+      "type": "used_by"
+    },
+    {
+      "source": "15",
+      "target": "27",
+      "type": "used_by"
+    },
+    {
+      "source": "13",
+      "target": "28",
+      "type": "used_by"
+    },
+    {
+      "source": "6",
+      "target": "29",
+      "type": "used_by"
+    },
+    {
+      "source": "10",
+      "target": "9",
+      "type": "prerequisite"
+    },
+    {
+      "source": "11",
+      "target": "10",
+      "type": "prerequisite"
+    },
+    {
+      "source": "12",
+      "target": "10",
+      "type": "prerequisite"
+    },
+    {
+      "source": "15",
+      "target": "14",
+      "type": "prerequisite"
+    },
+    {
+      "source": "17",
+      "target": "18",
+      "type": "related_to"
+    },
+    {
+      "source": "17",
+      "target": "19",
+      "type": "prerequisite"
+    },
+    {
+      "source": "18",
+      "target": "19",
+      "type": "prerequisite"
+    },
+    {
+      "source": "24",
+      "target": "2",
+      "type": "evaluates"
+    },
+    {
+      "source": "24",
+      "target": "3",
+      "type": "evaluates"
+    },
+    {
+      "source": "24",
+      "target": "6",
+      "type": "evaluates"
+    },
+    {
+      "source": "24",
+      "target": "7",
+      "type": "evaluates"
+    },
+    {
+      "source": "25",
+      "target": "2",
+      "type": "evaluates"
+    },
+    {
+      "source": "25",
+      "target": "3",
+      "type": "evaluates"
+    },
+    {
+      "source": "25",
+      "target": "16",
+      "type": "evaluates"
+    },
+    {
+      "source": "31",
+      "target": "3",
+      "type": "used_in"
+    },
+    {
+      "source": "32",
+      "target": "3",
+      "type": "used_in"
+    },
+    {
+      "source": "32",
+      "target": "13",
+      "type": "used_in"
+    },
+    {
+      "source": "33",
+      "target": "6",
+      "type": "used_in"
+    },
+    {
+      "source": "34",
+      "target": "53",
+      "type": "prerequisite"
+    },
+    {
+      "source": "35",
+      "target": "53",
+      "type": "prerequisite"
+    },
+    {
+      "source": "35",
+      "target": "54",
+      "type": "prerequisite"
+    },
+    {
+      "source": "36",
+      "target": "7",
+      "type": "used_in"
+    },
+    {
+      "source": "37",
+      "target": "41",
+      "type": "implements"
+    },
+    {
+      "source": "38",
+      "target": "41",
+      "type": "implements"
+    },
+    {
+      "source": "39",
+      "target": "41",
+      "type": "implements"
+    },
+    {
+      "source": "42",
+      "target": "37",
+      "type": "prerequisite"
+    },
+    {
+      "source": "42",
+      "target": "38",
+      "type": "prerequisite"
+    },
+    {
+      "source": "40",
+      "target": "34",
+      "type": "evaluates"
+    },
+    {
+      "source": "40",
+      "target": "35",
+      "type": "evaluates"
+    },
+    {
+      "source": "40",
+      "target": "36",
+      "type": "evaluates"
+    },
+    {
+      "source": "43",
+      "target": "16",
+      "type": "used_in"
+    },
+    {
+      "source": "44",
+      "target": "8",
+      "type": "used_in"
+    },
+    {
+      "source": "44",
+      "target": "16",
+      "type": "used_in"
+    },
+    {
+      "source": "45",
+      "target": "8",
+      "type": "used_in"
+    },
+    {
+      "source": "45",
+      "target": "44",
+      "type": "related_to"
+    },
+    {
+      "source": "46",
+      "target": "5",
+      "type": "implements"
+    },
+    {
+      "source": "47",
+      "target": "6",
+      "type": "related_to"
+    },
+    {
+      "source": "48",
+      "target": "16",
+      "type": "used_in"
+    },
+    {
+      "source": "48",
+      "target": "19",
+      "type": "related_to"
+    },
+    {
+      "source": "49",
+      "target": "16",
+      "type": "used_in"
+    },
+    {
+      "source": "49",
+      "target": "50",
+      "type": "related_to"
+    },
+    {
+      "source": "50",
+      "target": "43",
+      "type": "used_in"
+    },
+    {
+      "source": "50",
+      "target": "16",
+      "type": "used_in"
+    },
+    {
+      "source": "51",
+      "target": "16",
+      "type": "used_in"
+    },
+    {
+      "source": "51",
+      "target": "17",
+      "type": "prerequisite"
+    },
+    {
+      "source": "52",
+      "target": "16",
+      "type": "used_in"
+    },
+    {
+      "source": "52",
+      "target": "43",
+      "type": "used_in"
+    },
+    {
+      "source": "53",
+      "target": "17",
+      "type": "used_in"
+    },
+    {
+      "source": "53",
+      "target": "22",
+      "type": "used_in"
+    },
+    {
+      "source": "53",
+      "target": "23",
+      "type": "used_in"
+    },
+    {
+      "source": "54",
+      "target": "49",
+      "type": "used_in"
+    },
+    {
+      "source": "54",
+      "target": "50",
+      "type": "used_in"
+    }
+  ]
+}

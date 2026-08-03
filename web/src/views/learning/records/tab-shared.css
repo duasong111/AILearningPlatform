@@ -1,0 +1,190 @@
+/* ============================================================
+   Shared styles for learning-records tabs
+     - 三个 Tab 各自 import 这份, 保持视觉一致
+     - 不用 @scope / unscoped, 因为 import 进 <style scoped> 后自动加 data-v-*
+   ============================================================ */
+
+.x-tab-panel {
+  display: block;
+  min-height: 240px;
+}
+
+.x-list {
+  display: flex;
+  flex-direction: column;
+}
+.x-list-row {
+  display: grid;
+  grid-template-columns: 100px 1fr auto;
+  align-items: start;
+  gap: 16px;
+  padding: 14px 4px;
+  border-bottom: 1px solid var(--x-hairline);
+}
+.x-list-row:last-child {
+  border-bottom: 0;
+}
+
+.x-list-time {
+  font-family: var(--x-font-mono);
+  font-size: 11px;
+  letter-spacing: 0.4px;
+  color: var(--x-body-mid);
+  padding-top: 2px;
+}
+
+.x-list-main {
+  min-width: 0;
+}
+.x-list-title {
+  font-family: var(--x-font-display);
+  font-size: 14px;
+  color: var(--x-ink);
+  margin: 0 0 4px;
+  line-height: 1.45;
+}
+.x-list-glyph {
+  display: inline-block;
+  width: 16px;
+  color: var(--x-body-mid);
+  font-size: 12px;
+  margin-right: 4px;
+}
+
+.x-list-meta {
+  font-family: var(--x-font-mono);
+  font-size: 12px;
+  color: var(--x-body-mid);
+  white-space: nowrap;
+  padding-top: 2px;
+}
+
+/* === eyebrow primitive === */
+.x-eyebrow {
+  font-family: var(--x-font-mono);
+  font-size: 11px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+}
+.x-eyebrow-mute {
+  color: var(--x-body-mid);
+}
+
+/* === empty / error / link button === */
+.x-state-empty,
+.x-state-error {
+  text-align: center;
+  padding: 64px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.x-state-msg {
+  font-size: 14px;
+  color: var(--x-body);
+  margin: 0;
+}
+.x-state-error .x-state-msg {
+  color: var(--x-error);
+  font-family: var(--x-font-mono);
+}
+.x-btn-link {
+  background: transparent;
+  border: 0;
+  color: var(--x-primary);
+  cursor: pointer;
+  font-family: var(--x-font-mono);
+  font-size: 12px;
+  letter-spacing: 0.8px;
+  padding: 6px 12px;
+  border-radius: var(--x-rounded-pill);
+  transition: background 0.12s;
+}
+.x-btn-link:hover:not(:disabled) {
+  background: var(--x-primary-soft);
+}
+.x-btn-link:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* === skeleton shimmer === */
+.x-list-row-skel { pointer-events: none; }
+.x-skel {
+  background: linear-gradient(
+    90deg,
+    var(--x-canvas-mid) 0%,
+    var(--x-canvas-soft) 50%,
+    var(--x-canvas-mid) 100%
+  );
+  background-size: 200% 100%;
+  animation: x-skel-shimmer 1.4s ease-in-out infinite;
+  border-radius: 4px;
+}
+.x-skel-time { height: 12px; width: 70px; }
+.x-skel-main { height: 16px; }
+.x-skel-meta { height: 12px; width: 40px; }
+.x-skel-block-l { height: 24px; width: 60%; }
+.x-skel-block-m { height: 16px; width: 90%; }
+.x-skel-block-s { height: 12px; width: 30%; }
+
+@keyframes x-skel-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ============================================================
+   Clickable 行 (资源/答题 通用) —— 弹 "去哪儿" modal
+   视觉: hover 浅色底 + 蓝色左边框 + cursor pointer
+   ============================================================ */
+.x-list-row.is-clickable,
+.x-list-row-clickable {
+  cursor: pointer;
+  user-select: none;
+  border-radius: 8px;
+  margin: 0 -4px;
+  padding-left: 4px;
+  padding-right: 4px;
+  transition: background 0.12s, box-shadow 0.12s;
+}
+.x-list-row.is-clickable:hover,
+.x-list-row-clickable:hover {
+  background: var(--x-canvas-soft);
+  box-shadow: inset 2px 0 0 var(--x-primary);
+}
+.x-list-row.is-clickable:focus-visible,
+.x-list-row-clickable:focus-visible {
+  outline: 2px solid var(--x-primary);
+  outline-offset: 2px;
+}
+
+/* ExerciseRecordsTab 单独的"展开答案"按钮: 卡片右下方,
+   阻止冒泡到卡片 (不触发弹 picker) */
+.x-answer-toggle {
+  background: transparent;
+  border: 1px solid var(--x-hairline);
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-family: var(--x-font-mono);
+  font-size: 11px;
+  letter-spacing: 0.4px;
+  color: var(--x-body-mid);
+  cursor: pointer;
+  margin-top: 6px;
+  transition: color 0.12s, border-color 0.12s, background 0.12s;
+}
+.x-answer-toggle:hover {
+  color: var(--x-primary);
+  border-color: var(--x-primary);
+  background: var(--x-primary-soft);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .x-skel {
+    animation: none;
+    background: var(--x-canvas-mid);
+  }
+  .x-list-row.is-clickable,
+  .x-list-row-clickable { transition: none; }
+}

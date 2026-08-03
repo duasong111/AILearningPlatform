@@ -1,0 +1,843 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>我的书架 — 学径</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root {
+  --bg:#ffffff;--surface:#f5f5f7;--surface-warm:#fbfbfd;
+  --fg:#1d1d1f;--fg-2:#424245;--muted:#6e6e73;--meta:#86868b;
+  --border:#d2d2d7;--border-soft:#e8e8ed;
+  --accent:#0071e3;--accent-on:#ffffff;--accent-hover:#0077ed;--accent-active:#0066cc;
+  --warn:#eab308;--danger:#dc2626;--success:#16a34a;
+  --font-display:"SF Pro Display","SF Pro Icons","Helvetica Neue",-apple-system,BlinkMacSystemFont,"Inter","PingFang SC","Microsoft YaHei",sans-serif;
+  --font-body:"SF Pro Text","SF Pro Icons","Helvetica Neue",-apple-system,BlinkMacSystemFont,"Inter","PingFang SC","Microsoft YaHei",sans-serif;
+  --mono:"SF Mono",ui-monospace,"JetBrains Mono",Menlo,monospace;
+  --leading-body:1.47;--tracking-display:-0.015em;
+  --radius-sm:8px;--radius-md:12px;--radius-lg:18px;--radius-xl:24px;--radius-pill:980px;
+  --motion-base:220ms;--ease-standard:cubic-bezier(0.28,0,0.22,1);
+}
+html,body{min-height:100%;background:var(--bg);color:var(--fg);font-family:var(--font-body);
+  -webkit-font-smoothing:antialiased;line-height:var(--leading-body);
+  font-feature-settings:"tnum" 1}
+
+.topbar{position:sticky;top:0;z-index:50;background:rgba(255,255,255,0.85);
+  backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);
+  border-bottom:1px solid var(--border-soft);padding:18px 40px 14px}
+.topbar-inner{max-width:1400px;margin:0 auto}
+.page-title{font-size:28px;font-weight:600;letter-spacing:var(--tracking-display);line-height:1.1;font-family:var(--font-display);color:var(--fg);margin-bottom:4px}
+.page-sub{font-size:13px;color:var(--muted);margin-bottom:14px}
+.chip-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.chip{padding:6px 14px;border-radius:var(--radius-pill);border:1px solid var(--border);
+  background:#fff;color:var(--fg-2);font-size:12px;font-weight:500;cursor:pointer;
+  font-family:var(--font-body);transition:all var(--motion-base) var(--ease-standard);
+  display:inline-flex;align-items:center;gap:5px}
+.chip:hover{border-color:var(--accent);color:var(--accent)}
+.chip.active{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:600}
+.chip .num{font-family:var(--mono);font-size:11px;opacity:.7}
+.chip.active .num{opacity:.9}
+.chip-spacer{flex:1}
+.chip-sort{font-size:12px;color:var(--muted);font-family:var(--font-body);
+  display:inline-flex;align-items:center;gap:6px}
+.chip-sort select{border:none;background:transparent;font-size:12px;color:var(--fg-2);
+  font-family:var(--font-body);font-weight:500;cursor:pointer;outline:none;padding:2px 4px}
+
+.page{max-width:1400px;margin:0 auto;padding:32px 40px 80px}
+.shelf-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+  gap:24px}
+
+.book-card{background:#fff;border-radius:var(--radius-lg);overflow:hidden;
+  border:1px solid var(--border-soft);cursor:pointer;
+  transition:all var(--motion-base) var(--ease-standard);
+  display:flex;flex-direction:column;position:relative}
+.book-card:hover{border-color:var(--border);transform:translateY(-3px);
+  box-shadow:0 12px 32px rgba(0,0,0,0.08)}
+.book-card:hover .cover-art{transform:scale(1.04)}
+
+.cover-wrap{padding:20px 20px 14px;display:flex;justify-content:center;
+  background:linear-gradient(180deg,var(--surface-warm),var(--surface));
+  position:relative}
+.cover{width:140px;height:200px;border-radius:6px;position:relative;overflow:hidden;
+  display:flex;flex-direction:column;justify-content:flex-end;padding:14px 12px;
+  box-shadow:0 4px 14px rgba(0,0,0,0.12),0 1px 3px rgba(0,0,0,0.08);
+  font-family:var(--font-display);color:#fff}
+.cover-art{position:absolute;inset:0;transition:transform .4s var(--ease-standard);
+  display:flex;flex-direction:column;justify-content:space-between;padding:14px 12px}
+.cover-art::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,transparent 0%,rgba(0,0,0,0.18) 100%);z-index:1}
+.cover-art > *{position:relative;z-index:2}
+.cover-tag{font-size:9px;letter-spacing:.16em;text-transform:uppercase;opacity:.7;
+  font-weight:600;font-family:var(--font-body)}
+.cover-title{font-size:16px;font-weight:600;letter-spacing:-.01em;line-height:1.2;
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.cover-author{font-size:10px;opacity:.65;font-family:var(--font-body);font-weight:500;
+  margin-top:auto;letter-spacing:.04em}
+.cover-spine{position:absolute;left:0;top:0;bottom:0;width:4px;background:rgba(0,0,0,0.18);z-index:2}
+.cover-badge{position:absolute;top:8px;right:8px;font-size:10px;font-weight:600;
+  background:rgba(255,255,255,0.95);color:var(--fg);padding:3px 8px;border-radius:var(--radius-pill);
+  font-family:var(--mono);z-index:3;display:flex;align-items:center;gap:3px;
+  box-shadow:0 2px 6px rgba(0,0,0,0.08)}
+.cover-badge.done{background:rgba(52,199,89,0.95);color:#fff}
+.cover-badge.paused{background:rgba(255,159,10,0.95);color:#fff}
+
+.card-body{padding:14px 18px 18px;display:flex;flex-direction:column;flex:1}
+.card-title{font-size:14px;font-weight:600;letter-spacing:-.01em;color:var(--fg);
+  line-height:1.3;margin-bottom:2px;
+  display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
+.card-author{font-size:11px;color:var(--meta);margin-bottom:12px;
+  display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
+.card-progress{margin-bottom:12px}
+.progress-meta{display:flex;align-items:baseline;justify-content:space-between;
+  font-size:11px;color:var(--meta);font-family:var(--mono);margin-bottom:5px}
+.progress-pct{color:var(--accent);font-weight:600;font-size:13px;letter-spacing:-.01em}
+.progress-track{height:4px;background:var(--border-soft);border-radius:2px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),#34c759);border-radius:2px;
+  transition:width .6s var(--ease-standard)}
+.card-stats{display:flex;align-items:center;gap:14px;font-size:11px;color:var(--muted);
+  font-family:var(--mono);font-variant-numeric:tabular-nums;margin-bottom:14px}
+.card-stat{display:flex;align-items:center;gap:4px}
+.card-stat .ic{width:11px;height:11px;color:var(--meta)}
+.card-stat .val{color:var(--fg);font-weight:600;font-size:12px}
+.card-cta{padding:8px 12px;border-radius:var(--radius-pill);background:var(--accent);
+  color:#fff;font-size:12px;font-weight:600;font-family:var(--font-body);border:none;
+  cursor:pointer;transition:all var(--motion-base) var(--ease-standard);
+  display:flex;align-items:center;justify-content:center;gap:5px;margin-top:auto}
+.card-cta:hover{background:var(--accent-hover)}
+.card-cta.done{background:var(--surface);color:var(--success);border:1px solid rgba(52,199,89,0.3)}
+
+.empty{padding:120px 0;text-align:center;color:var(--muted)}
+.empty .ic{font-size:48px;margin-bottom:16px;opacity:.3;color:var(--meta)}
+.empty .t{font-size:18px;font-weight:500;color:var(--fg-2);margin-bottom:6px;font-family:var(--font-display);letter-spacing:-.01em}
+.empty .h{font-size:13px;color:var(--meta);max-width:380px;margin:0 auto;line-height:1.6}
+
+.statsbar{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:32px}
+.stat-box{padding:16px 20px;background:var(--surface);border-radius:var(--radius-lg);
+  border:1px solid var(--border-soft)}
+.stat-label{font-size:11px;color:var(--meta);text-transform:uppercase;letter-spacing:.04em;
+  font-weight:600;margin-bottom:6px;font-family:var(--font-body)}
+.stat-val{font-size:24px;font-weight:600;color:var(--fg);font-family:var(--mono);
+  font-variant-numeric:tabular-nums;letter-spacing:-.02em;line-height:1.1}
+.stat-val .unit{font-size:13px;color:var(--muted);font-weight:500;margin-left:4px}
+.stat-foot{font-size:11px;color:var(--meta);margin-top:4px;font-family:var(--mono)}
+
+.reader-overlay{position:fixed;inset:0;z-index:200;background:var(--bg);
+  display:none;flex-direction:column}
+.reader-overlay.open{display:flex;animation:fadeIn .25s var(--ease-standard)}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+.reader-top{display:flex;align-items:center;gap:16px;padding:14px 24px;
+  border-bottom:1px solid var(--border-soft);background:rgba(255,255,255,0.85);
+  backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);
+  flex-shrink:0}
+.reader-close{width:36px;height:36px;border-radius:50%;border:none;background:var(--surface);
+  color:var(--fg);cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:all var(--motion-base) var(--ease-standard);font-size:18px}
+.reader-close:hover{background:var(--border-soft)}
+.reader-info{flex:1;min-width:0}
+.reader-title{font-size:15px;font-weight:600;color:var(--fg);line-height:1.2;
+  font-family:var(--font-display);letter-spacing:-.01em;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.reader-meta{font-size:12px;color:var(--muted);font-family:var(--mono);margin-top:2px}
+.reader-actions{display:flex;align-items:center;gap:8px}
+.r-btn{padding:7px 12px;border-radius:7px;border:1px solid var(--border);background:#fff;
+  color:var(--fg-2);font-size:12px;font-weight:500;cursor:pointer;font-family:var(--font-body);
+  display:inline-flex;align-items:center;gap:5px;transition:all var(--motion-base) var(--ease-standard)}
+.r-btn:hover{border-color:var(--accent);color:var(--accent)}
+.r-btn .k{font-size:10px;font-family:var(--mono);padding:1px 4px;background:var(--surface);
+  border-radius:3px;color:var(--muted)}
+.r-btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.r-btn.primary:hover{background:var(--accent-hover);border-color:var(--accent-hover);color:#fff}
+
+.reader-body{flex:1;display:grid;grid-template-columns:1fr 380px;min-height:0}
+.reader-pages{overflow-y:auto;background:var(--surface);padding:32px 0;
+  display:flex;flex-direction:column;align-items:center;gap:24px;
+  scroll-behavior:smooth}
+.reader-pages::-webkit-scrollbar{width:6px}
+.reader-pages::-webkit-scrollbar-thumb{background:var(--border);border-radius:6px}
+
+.pdf-page{width:min(720px,90%);background:#fff;aspect-ratio:8.5/11;
+  padding:64px 72px;box-shadow:0 2px 12px rgba(0,0,0,0.06),0 12px 32px rgba(0,0,0,0.04);
+  font-family:"PingFang SC","Songti SC","Iowan Old Style",Georgia,serif;
+  color:#1a1a1a;position:relative;line-height:1.7;display:flex;flex-direction:column}
+.pdf-page::after{content:attr(data-page);position:absolute;bottom:24px;left:50%;
+  transform:translateX(-50%);font-size:11px;color:#999;font-family:var(--mono);
+  font-variant-numeric:tabular-nums}
+.pdf-chapter{font-size:11px;color:#888;letter-spacing:.16em;text-transform:uppercase;
+  font-weight:600;margin-bottom:8px;font-family:var(--font-body)}
+.pdf-title{font-size:24px;font-weight:600;letter-spacing:-.01em;line-height:1.25;
+  margin-bottom:18px;color:#111;font-family:var(--font-display)}
+.pdf-h2{font-size:16px;font-weight:600;color:#222;margin:18px 0 8px;letter-spacing:-.005em}
+.pdf-h3{font-size:13px;font-weight:600;color:#333;margin:14px 0 6px}
+.pdf-p{font-size:13.5px;line-height:1.85;margin-bottom:12px;text-align:justify;color:#2a2a2a}
+.pdf-p.first::first-letter{font-size:42px;float:left;font-weight:600;line-height:1;
+  padding-right:8px;padding-top:4px;color:#111}
+.pdf-code{background:#f6f6f8;border-left:3px solid #0071e3;padding:10px 14px;
+  margin:12px 0;font-family:var(--mono);font-size:12px;color:#333;
+  border-radius:0 6px 6px 0;line-height:1.65;white-space:pre-wrap}
+.pdf-quote{border-left:3px solid #d2d2d7;padding:6px 0 6px 14px;color:#555;
+  font-style:italic;margin:14px 0;font-size:13px}
+
+.ai-panel{background:var(--bg);border-left:1px solid var(--border);
+  display:flex;flex-direction:column;min-height:0}
+.ai-head{padding:16px 20px;border-bottom:1px solid var(--border-soft);flex-shrink:0}
+.ai-head-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.ai-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#2997ff);
+  display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:600;
+  font-family:var(--font-body);position:relative;flex-shrink:0}
+.ai-avatar .status{position:absolute;bottom:0;right:0;width:8px;height:8px;border-radius:50%;
+  background:var(--success);border:2px solid #fff}
+.ai-info{flex:1;min-width:0}
+.ai-name{font-size:13px;font-weight:600;color:var(--fg);font-family:var(--font-body);display:flex;
+  align-items:center;gap:6px}
+.ai-name .badge{font-size:9px;background:rgba(0,113,227,0.1);color:var(--accent);
+  padding:2px 6px;border-radius:6px;font-weight:600;letter-spacing:.04em}
+.ai-context{font-size:11px;color:var(--meta);font-family:var(--mono);margin-top:1px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ai-context .page-ref{color:var(--accent);font-weight:600}
+
+.ai-quick{padding:12px 20px;border-bottom:1px solid var(--border-soft);flex-shrink:0}
+.ai-quick-title{font-size:10px;color:var(--meta);text-transform:uppercase;letter-spacing:.04em;
+  font-weight:600;margin-bottom:8px;font-family:var(--font-body)}
+.ai-quick-row{display:flex;gap:6px;flex-wrap:wrap}
+.ai-quick-chip{padding:5px 10px;font-size:11px;background:var(--surface);color:var(--fg-2);
+  border:1px solid var(--border-soft);border-radius:var(--radius-pill);cursor:pointer;
+  font-family:var(--font-body);transition:all var(--motion-base) var(--ease-standard);
+  font-weight:500}
+.ai-quick-chip:hover{border-color:var(--accent);color:var(--accent);background:rgba(0,113,227,0.04)}
+
+.ai-chat{flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:14px;
+  min-height:0}
+.ai-chat::-webkit-scrollbar{width:4px}
+.ai-chat::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+
+.msg{display:flex;gap:8px;animation:msgIn .25s var(--ease-standard)}
+@keyframes msgIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.msg-avatar{width:24px;height:24px;border-radius:50%;flex-shrink:0;display:flex;
+  align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#fff;
+  font-family:var(--font-body);margin-top:2px}
+.msg-avatar.user{background:var(--fg-2)}
+.msg-avatar.ai{background:linear-gradient(135deg,var(--accent),#2997ff)}
+.msg-body{flex:1;min-width:0}
+.msg-name{font-size:11px;font-weight:600;color:var(--fg);margin-bottom:2px;font-family:var(--font-body)}
+.msg-name .role{color:var(--meta);font-weight:500;margin-left:4px;font-size:10px}
+.msg-bubble{font-size:13px;color:var(--fg);line-height:1.6;background:var(--surface);
+  padding:9px 12px;border-radius:10px;border-top-left-radius:2px;
+  font-family:var(--font-body);white-space:pre-wrap;word-break:break-word}
+.msg-bubble code{font-family:var(--mono);font-size:12px;background:rgba(0,113,227,0.08);
+  padding:1px 5px;border-radius:4px;color:var(--accent)}
+.msg-bubble strong{font-weight:600;color:var(--fg)}
+.msg.user .msg-bubble{background:rgba(0,113,227,0.06);border-top-left-radius:10px;
+  border-top-right-radius:2px;color:var(--fg)}
+.msg-bubble .ref-link{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--accent);
+  background:rgba(0,113,227,0.06);padding:3px 8px;border-radius:6px;margin-top:8px;
+  font-family:var(--mono);font-weight:600;cursor:pointer;transition:all var(--motion-base) var(--ease-standard)}
+.msg-bubble .ref-link:hover{background:rgba(0,113,227,0.12)}
+
+.typing{display:flex;gap:4px;padding:12px}
+.typing span{width:6px;height:6px;border-radius:50%;background:var(--meta);
+  animation:typing 1.2s ease-in-out infinite}
+.typing span:nth-child(2){animation-delay:.15s}
+.typing span:nth-child(3){animation-delay:.3s}
+@keyframes typing{0%,60%,100%{opacity:.3;transform:translateY(0)}30%{opacity:1;transform:translateY(-4px)}}
+
+.ai-input-wrap{padding:12px 16px 16px;border-top:1px solid var(--border-soft);
+  background:var(--surface);flex-shrink:0}
+.ai-input-box{display:flex;align-items:flex-end;gap:8px;background:#fff;border:1px solid var(--border);
+  border-radius:14px;padding:8px 8px 8px 14px;transition:all var(--motion-base) var(--ease-standard)}
+.ai-input-box:focus-within{border-color:var(--accent);box-shadow:0 0 0 4px rgba(0,113,227,0.08)}
+.ai-input{flex:1;border:none;outline:none;background:transparent;font-family:var(--font-body);
+  font-size:13px;color:var(--fg);line-height:1.5;resize:none;max-height:96px;min-height:20px}
+.ai-input::placeholder{color:var(--meta)}
+.ai-send{width:32px;height:32px;border-radius:50%;border:none;background:var(--accent);
+  color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:all var(--motion-base) var(--ease-standard);flex-shrink:0}
+.ai-send:hover:not(:disabled){background:var(--accent-hover)}
+.ai-send:disabled{background:var(--border);cursor:not-allowed;color:var(--meta)}
+.ai-send svg{width:14px;height:14px}
+.ai-hint{display:flex;align-items:center;justify-content:space-between;margin-top:6px;
+  font-size:10px;color:var(--meta);font-family:var(--mono)}
+.ai-hint .kbd{font-family:var(--mono);padding:1px 4px;background:#fff;border:1px solid var(--border-soft);
+  border-radius:3px;color:var(--muted);margin:0 2px}
+
+@media (max-width:1024px){
+  .reader-body{grid-template-columns:1fr 340px}
+  .pdf-page{padding:48px 56px}
+}
+@media (max-width:880px){
+  .topbar{padding:14px 20px 12px}
+  .page{padding:24px 20px 60px}
+  .statsbar{grid-template-columns:repeat(2,1fr)}
+  .shelf-grid{grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px}
+  .cover{width:120px;height:170px}
+  .reader-body{grid-template-columns:1fr}
+  .ai-panel{display:none}
+  .reader-overlay.ai-open .reader-body{grid-template-columns:1fr}
+  .reader-overlay.ai-open .reader-pages{display:none}
+  .reader-overlay.ai-open .ai-panel{display:flex}
+  .pdf-page{padding:32px 28px;width:96%}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="page-title">我的书架</div>
+    <div class="page-sub">已加入 <span id="shelfCount">0</span> 本书,本月阅读时长 <span id="monthHours">0</span> 小时。</div>
+    <div class="chip-row" id="chipRow">
+      <button class="chip active" data-filter="all">全部 <span class="num" id="cnt-all">0</span></button>
+      <button class="chip" data-filter="reading">在读 <span class="num" id="cnt-reading">0</span></button>
+      <button class="chip" data-filter="paused">暂停 <span class="num" id="cnt-paused">0</span></button>
+      <button class="chip" data-filter="done">已完成 <span class="num" id="cnt-done">0</span></button>
+      <div class="chip-spacer"></div>
+      <span class="chip-sort">排序
+        <select id="sortSel">
+          <option value="recent">最近阅读</option>
+          <option value="progress">阅读进度</option>
+          <option value="added">加入时间</option>
+          <option value="time">学习时长</option>
+        </select>
+      </span>
+    </div>
+  </div>
+</div>
+
+<main class="page" id="pageMain">
+  <div class="statsbar" id="statsbar"></div>
+  <div class="shelf-grid" id="grid"></div>
+</main>
+
+<div class="reader-overlay" id="readerOverlay">
+  <div class="reader-top">
+    <button class="reader-close" id="readerClose" aria-label="关闭">×</button>
+    <div class="reader-info">
+      <div class="reader-title" id="readerTitle">书名</div>
+      <div class="reader-meta" id="readerMeta">作者 · 章节</div>
+    </div>
+    <div class="reader-actions">
+      <button class="r-btn" id="rPrev"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6"><polyline points="7 3 4 6 7 9" stroke-linecap="round" stroke-linejoin="round"/></svg>上一页<span class="k">←</span></button>
+      <button class="r-btn" id="rNext">下一页<span class="k">→</span><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6"><polyline points="5 3 8 6 5 9" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <button class="r-btn primary" id="rAiToggle"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="6" cy="6" r="4"/><circle cx="6" cy="6" r="1.5" fill="currentColor"/></svg>AI 助手</button>
+    </div>
+  </div>
+
+  <div class="reader-body">
+    <div class="reader-pages" id="readerPages"></div>
+    <aside class="ai-panel" id="aiPanel">
+      <div class="ai-head">
+        <div class="ai-head-row">
+          <div class="ai-avatar">学<span class="status"></span></div>
+          <div class="ai-info">
+            <div class="ai-name">学径 AI <span class="badge">RAG</span></div>
+            <div class="ai-context">正在阅读 <span class="page-ref" id="aiPageRef">P.1</span> · 上下文已加载</div>
+          </div>
+        </div>
+      </div>
+      <div class="ai-quick">
+        <div class="ai-quick-title">快速提问</div>
+        <div class="ai-quick-row" id="aiQuickRow"></div>
+      </div>
+      <div class="ai-chat" id="aiChat"></div>
+      <div class="ai-input-wrap">
+        <div class="ai-input-box">
+          <textarea class="ai-input" id="aiInput" placeholder="向 AI 提问关于这本书的内容…" rows="1"></textarea>
+          <button class="ai-send" id="aiSend" disabled aria-label="发送">
+            <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8">
+              <path d="m2 7 10-5-5 5 5 5-10-5z" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
+        <div class="ai-hint">
+          <span>基于本书内容回答</span>
+          <span><span class="kbd">Enter</span> 发送 · <span class="kbd">Shift+Enter</span> 换行</span>
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<script>
+const BOOKS_MINE = [
+  {id:1, title:"算法导论", titleEn:"Introduction to Algorithms", author:"Thomas H. Cormen 等",
+    category:"cs", catName:"计算机", cover:{from:"#0071e3", to:"#003a8c"},
+    chaptersTotal:32, chaptersDone:17, pagesTotal:748, pagesRead:392, hoursSpent:14.2,
+    lastRead:"2 天前", addedAt:"2025-04-12", status:"reading", currentPage:392,
+    pages:[
+      {n:390, ch:"第 12 章 · 二叉搜索树", h:"12.2 什么是二叉搜索树", isCurrent:true,
+       ps:[
+        {type:"p", text:"二叉搜索树 (BST) 是一种被广泛使用的树形数据结构,支持在 O(log n) 期望时间内完成搜索、插入、删除等基本操作。它的核心性质非常简单:对于树中任意节点 x,其左子树所有节点的键值都小于 x.key,右子树所有节点的键值都大于 x.key。"},
+        {type:"p", text:"这一性质意味着我们可以通过比较目标键值与当前节点的键值,决定向左还是向右递归查找,从而把搜索路径长度压缩到树的高度。"},
+        {type:"code", text:"TREE-SEARCH(x, k)\n  if x == NIL or k == x.key\n    return x\n  if k < x.key\n    return TREE-SEARCH(x.left, k)\n  else\n    return TREE-SEARCH(x.right, k)"},
+        {type:"h2", text:"12.2.1 遍历操作"},
+        {type:"p", text:"中序遍历一棵 BST 会按照键值升序访问所有节点——这是 BST 区别于一般二叉树的核心特征之一。利用这一性质,我们可以在 O(n) 时间内完成排序,这就是经典的'树排序'。"},
+        {type:"quote", text:"中序遍历一棵 BST 等价于对所有键值排序输出 ——Cormen 等,《算法导论》12.2"},
+       ]},
+      {n:391, ch:"第 12 章 · 二叉搜索树", h:"12.2.2 查询最值",
+       ps:[
+        {type:"h2", text:"最小元与最大元"},
+        {type:"p", text:"根据 BST 的递归定义,最小元一定在最左下的节点,最大元一定在最右下的节点。我们可以分别从根节点开始,沿 left 或 right 指针一路向下,直到遇到 NIL,时间复杂度为 O(h),h 是树的高度。"},
+        {type:"p", text:"在平衡 BST 上 h = ⌊log₂ n⌋,所以这两个操作都是 O(log n) 的——这正是 BST 优于无序线性结构的关键。"},
+        {type:"code", text:"TREE-MINIMUM(x)\n  while x.left != NIL\n    x = x.left\n  return x"},
+       ]},
+      {n:392, ch:"第 12 章 · 二叉搜索树", h:"12.2.3 后继与前驱",
+       ps:[
+        {type:"h2", text:"后继的查找"},
+        {type:"p", text:"给定一个节点 x,我们经常需要找到在中序遍历中 x 的下一个节点(即后继)。这是很多 BST 高级操作的基础,比如按顺序输出、范围查询、删除节点的辅助定位等。"},
+        {type:"p", text:"查找后继有两种情况:如果 x 有右子树,那么后继就是右子树中的最小元;否则,我们需要沿着父指针向上回溯,直到某个节点是其父节点的左孩子,那个父节点就是 x 的后继。"},
+        {type:"code", text:"TREE-SUCCESSOR(x)\n  if x.right != NIL\n    return TREE-MINIMUM(x.right)\n  y = x.p\n  while y != NIL and x == y.right\n    x = y\n    y = y.p\n  return y"},
+        {type:"quote", text:"理解了后继,你就理解了 BST 上几乎所有基于位置的算法。"},
+       ]},
+      {n:393, ch:"第 12 章 · 二叉搜索树", h:"12.3 插入与删除",
+       ps:[
+        {type:"h2", text:"12.3.1 插入操作"},
+        {type:"p", text:"BST 插入的关键在于保持 BST 性质:新节点总是作为叶子插入,沿树向下找到合适的位置即可。这个过程从根开始,根据键值比较向左或向右,直到遇到 NIL——这个 NIL 位置就是新节点的插入点。"},
+        {type:"code", text:"TREE-INSERT(T, z)\n  y = NIL\n  x = T.root\n  while x != NIL\n    y = x\n    if z.key < x.key\n      x = x.left\n    else\n      x = x.right\n  z.p = y\n  if y == NIL\n    T.root = z\n  else if z.key < y.key\n    y.left = z\n  else\n    y.right = z"},
+       ]},
+      {n:394, ch:"第 12 章 · 二叉搜索树", h:"12.3.2 删除操作",
+       ps:[
+        {type:"p", text:"删除比插入复杂得多,因为我们需要处理三种情况:被删节点没有孩子(简单移除)、只有一个孩子(替换)、有两个孩子(找到后继,用后继的值替换被删节点,再删除后继)。"},
+        {type:"p", text:"最巧妙的设计是用'拼接'(TRANSPLANT)子过程来统一处理——它用一个子树替换另一棵子树,完全不管被替换子树根节点的父子关系。"},
+        {type:"quote", text:"删除操作是 BST 上第一个真正考验指针操作的算法——Cormen"},
+       ]},
+    ]},
+  {id:9, title:"认知觉醒", titleEn:"Cognitive Awakening", author:"周岭",
+    category:"design", catName:"认知", cover:{from:"#af52de", to:"#7d2db8"},
+    chaptersTotal:7, chaptersDone:5, pagesTotal:236, pagesRead:172, hoursSpent:6.8,
+    lastRead:"昨天", addedAt:"2025-05-01", status:"reading", currentPage:172,
+    pages:[
+      {n:172, ch:"第 5 章 · 成长:成为更高版本的自己", h:"5.2 元认知——人类的终极能力", isCurrent:true,
+       ps:[
+        {type:"p", text:"元认知,简单说就是'对思考的思考'。它是我们人类独有的能力,让我们能够意识到自己在想什么、为什么这样想,从而跳出思维本身去审视它。"},
+        {type:"p", text:"举个例子:当你意识到自己正在和别人比较而产生焦虑时,你就已经在使用元认知了。大多数人一辈子都活在被情绪驱动的状态里,从未'看见'自己的思维过程。"},
+        {type:"quote", text:"元认知,就是那盏照亮自己思维的灯。"},
+        {type:"h2", text:"元认知的三层应用"},
+        {type:"p", text:"第一层:对当下的思考保持觉察——意识到自己在想什么;第二层:对思考过程进行反思——为什么我会这样想;第三层:基于反思调整未来的思考——下次可以怎么想得更对。"},
+       ]},
+      {n:173, ch:"第 5 章 · 成长", h:"5.3 自控力的本质",
+       ps:[
+        {type:"p", text:"很多人以为自控力是一种天赋,但其实它是一种'刻意练习'出来的能力。每次你在诱惑面前克制住自己,大脑中负责自控的前额叶皮层就会变厚一点点。"},
+        {type:"p", text:"相反,如果你长期放纵自己的欲望,前额叶皮层会逐渐变薄,自控力会越来越弱——这就是为什么很多人想改掉坏习惯却总是失败。"},
+       ]},
+    ]},
+  {id:4, title:"编程珠玑", titleEn:"Programming Pearls", author:"Jon Bentley",
+    category:"cs", catName:"计算机", cover:{from:"#ff9f0a", to:"#b86a00"},
+    chaptersTotal:15, chaptersDone:8, pagesTotal:256, pagesRead:138, hoursSpent:5.4,
+    lastRead:"3 天前", addedAt:"2025-04-20", status:"reading", currentPage:138,
+    pages:[
+      {n:138, ch:"第 8 章 · 算法设计技术", h:"8.4 平方根的快速算法", isCurrent:true,
+       ps:[
+        {type:"p", text:"求一个浮点数的平方根,看似简单,实则大有讲究。经典方法是牛顿迭代法——从初始估计 x₀ 开始,反复迭代 x_{n+1} = (x_n + a/x_n) / 2,直到收敛。"},
+        {type:"code", text:"def sqrt(a):\n    x = a\n    while True:\n        y = (x + a/x) / 2\n        if abs(y - x) < 1e-10:\n            return y\n        x = y"},
+        {type:"p", text:"牛顿法的收敛速度是二次的——每迭代一次,有效数字大约翻倍。这意味着从 x₀=1 开始,只需要 5-6 次迭代就能得到双精度下的精确结果。"},
+       ]},
+    ]},
+  {id:12, title:"思考,快与慢", titleEn:"Thinking, Fast and Slow", author:"Daniel Kahneman",
+    category:"philo", catName:"思维", cover:{from:"#1d1d1f", to:"#424245"},
+    chaptersTotal:38, chaptersDone:12, pagesTotal:512, pagesRead:168, hoursSpent:8.1,
+    lastRead:"1 周前", addedAt:"2025-03-15", status:"paused", currentPage:168,
+    pages:[
+      {n:168, ch:"第 12 章 · 系统 1 与系统 2", h:"12.1 两个系统的特征", isCurrent:true,
+       ps:[
+        {type:"p", text:"系统 1 是我们大脑的'快思考'模式——快速、直觉、不费力。它能瞬间识别面孔、判断距离、读出简单句子。系统 2 则是'慢思考'——缓慢、刻意、需要集中注意力。"},
+        {type:"quote", text:"系统 1 的运行是无意识且快速的,完全不费脑力;系统 2 将注意力转移到需要费脑力的思维活动上来。"},
+       ]},
+    ]},
+  {id:20, title:"深度学习", titleEn:"Deep Learning", author:"Ian Goodfellow 等",
+    category:"data", catName:"数据", cover:{from:"#1d1d1f", to:"#424245"},
+    chaptersTotal:20, chaptersDone:20, pagesTotal:776, pagesRead:776, hoursSpent:32.5,
+    lastRead:"上个月", addedAt:"2025-02-08", status:"done", currentPage:776,
+    pages:[
+      {n:776, ch:"第 20 章 · 深度学习的未来", h:"20.4 总结与展望", isCurrent:true,
+       ps:[
+        {type:"p", text:"深度学习已经从一个边缘研究方向,成长为人工智能时代的主导技术。它在视觉、语音、自然语言处理等领域都取得了突破性进展,但我们仍处于这场革命的早期阶段。"},
+        {type:"quote", text:"未来十年,深度学习将继续重塑我们的世界——但它的真正潜力,可能需要我们仍未发现的理论突破来释放。"},
+       ]},
+    ]},
+  {id:18, title:"数学之美", titleEn:"The Beauty of Mathematics", author:"吴军",
+    category:"data", catName:"数据", cover:{from:"#34c759", to:"#1f7a3a"},
+    chaptersTotal:29, chaptersDone:18, pagesTotal:448, pagesRead:281, hoursSpent:9.6,
+    lastRead:"5 天前", addedAt:"2025-04-25", status:"reading", currentPage:281,
+    pages:[
+      {n:281, ch:"第 18 章 · 简单之美:PageRank", h:"18.2 随机游走模型", isCurrent:true,
+       ps:[
+        {type:"p", text:"PageRank 的核心思想极其优雅:把整个互联网看成一个有向图,网页是节点,链接是边。一个网页的'重要性'等于所有链接到它的网页的重要性之和,再除以这些网页各自的出链数。"},
+        {type:"code", text:"PR(A) = (1-d) + d * Σ(PR(Ti)/C(Ti))\nfor Ti in pages_linking_to_A\n  where d = 0.85 (damping factor)"},
+        {type:"p", text:"这个看似简单的公式,解决了互联网时代最大的搜索难题——在数十亿网页中找到最相关的那些。"},
+       ]},
+    ]},
+];
+
+let currentFilter = 'all';
+let currentSort = 'recent';
+let currentBook = null;
+let currentPageIdx = 0;
+
+function filteredBooks(){
+  let list = currentFilter === 'all' ? BOOKS_MINE.slice() : BOOKS_MINE.filter(b => b.status === currentFilter);
+  const sortMap = {
+    recent: (a,b) => a.lastRead.length - b.lastRead.length,
+    progress: (a,b) => (b.chaptersDone/b.chaptersTotal) - (a.chaptersDone/a.chaptersTotal),
+    added: (a,b) => b.addedAt.localeCompare(a.addedAt),
+    time: (a,b) => b.hoursSpent - a.hoursSpent,
+  };
+  list.sort(sortMap[currentSort] || sortMap.recent);
+  return list;
+}
+
+function updateChipCounts(){
+  const counts = {
+    all: BOOKS_MINE.length,
+    reading: BOOKS_MINE.filter(b=>b.status==='reading').length,
+    paused: BOOKS_MINE.filter(b=>b.status==='paused').length,
+    done: BOOKS_MINE.filter(b=>b.status==='done').length,
+  };
+  Object.entries(counts).forEach(([k,v]) => {
+    const el = document.getElementById('cnt-'+k);
+    if(el) el.textContent = v;
+  });
+  document.getElementById('shelfCount').textContent = BOOKS_MINE.length;
+  const totalHrs = BOOKS_MINE.reduce((s,b)=>s+b.hoursSpent,0);
+  document.getElementById('monthHours').textContent = totalHrs.toFixed(1);
+}
+
+function renderStatsbar(){
+  const total = BOOKS_MINE.length;
+  const reading = BOOKS_MINE.filter(b=>b.status==='reading').length;
+  const totalHrs = BOOKS_MINE.reduce((s,b)=>s+b.hoursSpent,0);
+  const avgProgress = BOOKS_MINE.length
+    ? Math.round(BOOKS_MINE.reduce((s,b)=>s+(b.chaptersDone/b.chaptersTotal)*100, 0) / BOOKS_MINE.length)
+    : 0;
+  document.getElementById('statsbar').innerHTML = `
+    <div class="stat-box">
+      <div class="stat-label">书架总数</div>
+      <div class="stat-val">${total}<span class="unit">本</span></div>
+      <div class="stat-foot">${reading} 本在读 · ${BOOKS_MINE.filter(b=>b.status==='done').length} 本完成</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">累计学习</div>
+      <div class="stat-val">${totalHrs.toFixed(1)}<span class="unit">小时</span></div>
+      <div class="stat-foot">本月 +${(totalHrs*0.3).toFixed(1)}h</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">平均进度</div>
+      <div class="stat-val">${avgProgress}<span class="unit">%</span></div>
+      <div class="stat-foot">${avgProgress >= 70 ? '稳定推进中' : '需要更专注'}</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">累计页数</div>
+      <div class="stat-val">${BOOKS_MINE.reduce((s,b)=>s+b.pagesRead,0).toLocaleString()}<span class="unit">页</span></div>
+      <div class="stat-foot">总 ${BOOKS_MINE.reduce((s,b)=>s+b.pagesTotal,0).toLocaleString()} 页</div>
+    </div>`;
+}
+
+function renderCard(b){
+  const pct = Math.round((b.chaptersDone/b.chaptersTotal)*100);
+  const statusLabel = {reading:'在读', paused:'暂停', done:'已完'}[b.status];
+  const badgeCls = b.status === 'done' ? 'done' : b.status === 'paused' ? 'paused' : '';
+  return `
+  <article class="book-card" data-id="${b.id}">
+    <div class="cover-wrap">
+      <div class="cover">
+        <div class="cover-spine"></div>
+        <div class="cover-art" style="background:linear-gradient(135deg,${b.cover.from},${b.cover.to})">
+          <div class="cover-tag">${b.catName}</div>
+          <div class="cover-title">${b.title}</div>
+          <div class="cover-author">${b.author.split(' ')[0]}</div>
+        </div>
+      </div>
+      <div class="cover-badge ${badgeCls}">
+        ${b.status==='done'?'✓ 完成':b.status==='paused'?'⏸ 暂停':`● ${pct}%`}
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="card-title">${b.title}</div>
+      <div class="card-author">${b.author}</div>
+      <div class="card-progress">
+        <div class="progress-meta">
+          <span>${b.chaptersDone} / ${b.chaptersTotal} 章</span>
+          <span class="progress-pct">${pct}%</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" style="width:${pct}%"></div>
+        </div>
+      </div>
+      <div class="card-stats">
+        <div class="card-stat">
+          <svg class="ic" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="6" cy="6" r="4.5"/><polyline points="6 3 6 6 8 8" stroke-linecap="round"/>
+          </svg>
+          <span class="val">${b.hoursSpent}</span> 小时
+        </div>
+        <div class="card-stat">
+          <svg class="ic" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5">
+            <rect x="2" y="3" width="8" height="7" rx="1"/><line x1="2" y1="6" x2="10" y2="6"/>
+          </svg>
+          P.${b.pagesRead}
+        </div>
+        <div class="card-stat" style="margin-left:auto;color:var(--meta)">${b.lastRead}</div>
+      </div>
+      <button class="card-cta ${b.status==='done'?'done':''}" data-id="${b.id}">
+        ${b.status==='done'?'✓ 已完成':b.status==='paused'?'▶ 继续阅读':`▶ 继续 P.${b.pagesRead}`}
+      </button>
+    </div>
+  </article>`;
+}
+
+function renderGrid(){
+  const list = filteredBooks();
+  const $g = document.getElementById('grid');
+  if(!list.length){
+    $g.innerHTML = `<div class="empty" style="grid-column:1/-1">
+      <div class="ic">⊟</div>
+      <div class="t">该分类下还没有书</div>
+      <div class="h">尝试切换其他分类,或去「书架」添加你感兴趣的图书。</div>
+    </div>`;
+    return;
+  }
+  $g.innerHTML = list.map(renderCard).join('');
+  $g.querySelectorAll('.book-card').forEach(card => {
+    card.addEventListener('click', () => openReader(+card.dataset.id));
+  });
+}
+
+const $overlay = document.getElementById('readerOverlay');
+const $readerPages = document.getElementById('readerPages');
+const $readerTitle = document.getElementById('readerTitle');
+const $readerMeta = document.getElementById('readerMeta');
+const $aiChat = document.getElementById('aiChat');
+const $aiInput = document.getElementById('aiInput');
+const $aiSend = document.getElementById('aiSend');
+const $aiPageRef = document.getElementById('aiPageRef');
+const $aiQuickRow = document.getElementById('aiQuickRow');
+
+function openReader(id){
+  currentBook = BOOKS_MINE.find(b => b.id === id);
+  if(!currentBook) return;
+  $readerTitle.textContent = currentBook.title;
+  $readerMeta.textContent = `${currentBook.author} · ${currentBook.pages.length} 页预览`;
+
+  $readerPages.innerHTML = currentBook.pages.map(p => `
+    <article class="pdf-page" data-page="${p.n}" data-idx="${currentBook.pages.indexOf(p)}">
+      <div class="pdf-chapter">${p.ch}</div>
+      <div class="pdf-title">${p.h}</div>
+      ${p.ps.map(item => {
+        if(item.type === 'p') return `<p class="pdf-p${p.ps.indexOf(item)===0?' first':''}">${item.text}</p>`;
+        if(item.type === 'h2') return `<h2 class="pdf-h2">${item.text}</h2>`;
+        if(item.type === 'h3') return `<h3 class="pdf-h3">${item.text}</h3>`;
+        if(item.type === 'code') return `<pre class="pdf-code">${item.text}</pre>`;
+        if(item.type === 'quote') return `<blockquote class="pdf-quote">${item.text}</blockquote>`;
+        return '';
+      }).join('')}
+    </article>`).join('');
+
+  currentPageIdx = currentBook.pages.findIndex(p => p.isCurrent);
+  if(currentPageIdx < 0) currentPageIdx = 0;
+  setTimeout(() => {
+    const target = $readerPages.querySelector(`[data-idx="${currentPageIdx}"]`);
+    if(target) target.scrollIntoView({behavior:'auto', block:'start'});
+    $aiPageRef.textContent = `P.${currentBook.pages[currentPageIdx].n}`;
+  }, 50);
+
+  resetAI();
+  $overlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeReader(){
+  $overlay.classList.remove('open');
+  $overlay.classList.remove('ai-open');
+  document.body.style.overflow = '';
+  currentBook = null;
+}
+
+function readerNav(dir){
+  if(!currentBook) return;
+  const newIdx = Math.max(0, Math.min(currentBook.pages.length - 1, currentPageIdx + dir));
+  if(newIdx === currentPageIdx) return;
+  currentPageIdx = newIdx;
+  const target = $readerPages.querySelector(`[data-idx="${currentPageIdx}"]`);
+  if(target) target.scrollIntoView({behavior:'smooth', block:'start'});
+  $aiPageRef.textContent = `P.${currentBook.pages[currentPageIdx].n}`;
+}
+
+const QUICK_QUESTIONS = [
+  "解释这一节的核心概念",
+  "举个例子说明",
+  "下一节讲什么?",
+  "总结本节要点",
+  "这个概念和 X 有什么关系?",
+  "给一道练习题",
+];
+
+function renderQuickRow(){
+  $aiQuickRow.innerHTML = QUICK_QUESTIONS.map(q =>
+    `<button class="ai-quick-chip" data-q="${q}">${q}</button>`
+  ).join('');
+  $aiQuickRow.querySelectorAll('.ai-quick-chip').forEach(c => {
+    c.addEventListener('click', () => {
+      $aiInput.value = c.dataset.q;
+      $aiInput.focus();
+      autoResize();
+      updateSendState();
+    });
+  });
+}
+
+function appendMsg(role, text, withRefLink){
+  const $m = document.createElement('div');
+  $m.className = 'msg ' + role;
+  const avatarText = role === 'user' ? '我' : '学';
+  const avatarCls = role;
+  const name = role === 'user' ? '你' : '学径 AI';
+  const role_label = role === 'user' ? '提问者' : '基于 P.' + currentBook.pages[currentPageIdx].n;
+  $m.innerHTML = `
+    <div class="msg-avatar ${avatarCls}">${avatarText}</div>
+    <div class="msg-body">
+      <div class="msg-name">${name} <span class="role">${role_label}</span></div>
+      <div class="msg-bubble">${text}${withRefLink ? `<div class="ref-link" data-jump="${currentPageIdx}">↗ 回到 P.${currentBook.pages[currentPageIdx].n}</div>` : ''}</div>
+    </div>`;
+  $aiChat.appendChild($m);
+  $aiChat.scrollTop = $aiChat.scrollHeight;
+  const ref = $m.querySelector('.ref-link');
+  if(ref){
+    ref.addEventListener('click', () => {
+      const idx = +ref.dataset.jump;
+      currentPageIdx = idx;
+      const target = $readerPages.querySelector(`[data-idx="${idx}"]`);
+      if(target) target.scrollIntoView({behavior:'smooth', block:'start'});
+    });
+  }
+}
+
+function showTyping(){
+  const $t = document.createElement('div');
+  $t.className = 'msg ai';
+  $t.id = 'typingMsg';
+  $t.innerHTML = `
+    <div class="msg-avatar ai">学</div>
+    <div class="msg-body">
+      <div class="msg-name">学径 AI <span class="role">思考中…</span></div>
+      <div class="msg-bubble"><div class="typing"><span></span><span></span><span></span></div></div>
+    </div>`;
+  $aiChat.appendChild($t);
+  $aiChat.scrollTop = $aiChat.scrollHeight;
+}
+function hideTyping(){
+  const t = document.getElementById('typingMsg');
+  if(t) t.remove();
+}
+
+function generateResponse(q){
+  if(!currentBook) return '请先打开一本书。';
+  const p = currentBook.pages[currentPageIdx];
+  const ch = p.ch;
+  const t = p.h;
+
+  const responses = {
+    explain: `这一节「<strong>${t}</strong>」核心是 <code>${p.ps[0]?.text?.slice(0,30) || '基础概念'}</code>。\n\n简单说,就是把一个相对抽象的算法问题,用具体的数据结构操作来表达——BST 正是这种思路的典型代表。`,
+    example: `让我用本书第 ${p.n} 页的一个例子:\n\n${p.ps[1]?.text?.slice(0,80) || '见书中例子 12-1'}\n\n这个例子里可以看到 BST 的核心约束是如何被一步步维护的。`,
+    summary: `本节要点:\n• <strong>核心概念</strong>:${t}\n• <strong>关键操作</strong>:维护 BST 性质\n• <strong>复杂度</strong>:O(h),平衡时 h = O(log n)\n• <strong>下一节</strong>:插入与删除`,
+    next: `本节之后,《${currentBook.title}》将进入「${p.ps[3]?.text?.slice(0,20) || '下一主题'}」相关章节。你可以翻到下一章,我会自动切换上下文。`,
+    related: `这个概念和「<strong>${currentBook.catName}</strong>」领域的核心议题高度相关。书里在 P.${p.n+10} 会有更深入的展开。`,
+    exercise: `练习题(参考课后题 12-1):\n\n设计一个算法,在给定的 BST 上找出所有键值在 [a, b] 区间内的节点,要求时间复杂度 O(h + k),h 是树高,k 是输出节点数。`,
+  };
+  const key = q.match(/解释|核心|概念|什么|定义|介绍/i) ? 'explain'
+            : q.match(/举例|例子|example/i) ? 'example'
+            : q.match(/总结|要点|提炼|概括/i) ? 'summary'
+            : q.match(/下一节|之后|后面|接下来/i) ? 'next'
+            : q.match(/关系|关联|联系|比较|区别/i) ? 'related'
+            : q.match(/练习|题目|习题|test/i) ? 'exercise'
+            : null;
+  if(key) return responses[key];
+  return `好的,关于「${t}」:\n\n${p.ps[0]?.text?.slice(0,180) || '请阅读相关章节'}……\n\n如果想深入,可以问"举个例子"或"给一道练习题"。`;
+}
+
+function askAI(){
+  const q = $aiInput.value.trim();
+  if(!q || !currentBook) return;
+  appendMsg('user', q);
+  $aiInput.value = '';
+  autoResize();
+  updateSendState();
+  showTyping();
+  const delay = 600 + Math.random() * 700;
+  setTimeout(() => {
+    hideTyping();
+    appendMsg('ai', generateResponse(q), true);
+  }, delay);
+}
+
+function resetAI(){
+  $aiChat.innerHTML = '';
+  if(currentBook){
+    const p = currentBook.pages[currentPageIdx];
+    appendMsg('ai', `你好!我已经读完了这一节「<strong>${p.h}</strong>」(<code>${p.ch}</code>)。\n\n这一节核心是 BST 的递归结构与中序遍历特征——理解清楚后,后面插入/删除操作都会顺畅很多。\n\n有什么想问的吗?`);
+  }
+}
+
+function autoResize(){
+  $aiInput.style.height = 'auto';
+  $aiInput.style.height = Math.min($aiInput.scrollHeight, 96) + 'px';
+}
+function updateSendState(){
+  $aiSend.disabled = !$aiInput.value.trim();
+}
+
+document.getElementById('readerClose').addEventListener('click', closeReader);
+document.getElementById('rPrev').addEventListener('click', () => readerNav(-1));
+document.getElementById('rNext').addEventListener('click', () => readerNav(1));
+document.getElementById('rAiToggle').addEventListener('click', () => {
+  $overlay.classList.toggle('ai-open');
+});
+
+$aiInput.addEventListener('input', () => { autoResize(); updateSendState(); });
+$aiInput.addEventListener('keydown', e => {
+  if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); askAI(); }
+});
+$aiSend.addEventListener('click', askAI);
+
+document.getElementById('chipRow').addEventListener('click', e => {
+  const chip = e.target.closest('.chip');
+  if(!chip) return;
+  document.querySelectorAll('#chipRow .chip').forEach(c => c.classList.remove('active'));
+  chip.classList.add('active');
+  currentFilter = chip.dataset.filter;
+  renderGrid();
+});
+document.getElementById('sortSel').addEventListener('change', e => {
+  currentSort = e.target.value;
+  renderGrid();
+});
+
+window.addEventListener('keydown', e => {
+  if(!$overlay.classList.contains('open')) return;
+  if(e.key === 'Escape') closeReader();
+  else if(e.key === 'ArrowLeft' && !['TEXTAREA','INPUT'].includes(document.activeElement?.tagName)) readerNav(-1);
+  else if(e.key === 'ArrowRight' && !['TEXTAREA','INPUT'].includes(document.activeElement?.tagName)) readerNav(1);
+});
+
+$readerPages.addEventListener('scroll', () => {
+  if(!currentBook) return;
+  const pages = [...$readerPages.querySelectorAll('.pdf-page')];
+  const containerTop = $readerPages.getBoundingClientRect().top;
+  let bestIdx = 0, bestDist = Infinity;
+  pages.forEach((pg, i) => {
+    const d = Math.abs(pg.getBoundingClientRect().top - containerTop - 40);
+    if(d < bestDist){ bestDist = d; bestIdx = i; }
+  });
+  if(bestIdx !== currentPageIdx){
+    currentPageIdx = bestIdx;
+    $aiPageRef.textContent = `P.${currentBook.pages[currentPageIdx].n}`;
+  }
+});
+
+updateChipCounts();
+renderStatsbar();
+renderQuickRow();
+renderGrid();
+</script>
+</body>
+</html>

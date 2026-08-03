@@ -1,0 +1,875 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=1920">
+  <title>刷题练习 — AI 多智能体学习平台</title>
+  <style>
+    :root {
+      --bg:       oklch(98.5% 0.003 250);
+      --surface:  oklch(100% 0 0);
+      --fg:       oklch(18% 0.012 250);
+      --muted:    oklch(54% 0.012 250);
+      --border:   oklch(91% 0.005 250);
+      --accent:   oklch(56% 0.19 255);
+      --accent-fg:oklch(100% 0 0);
+      --accent-subtle:oklch(95% 0.03 255);
+      --success:  oklch(52% 0.15 155);
+      --success-subtle:oklch(96% 0.04 155);
+      --warning:  oklch(68% 0.14 80);
+      --warning-subtle:oklch(97% 0.04 80);
+      --danger:   oklch(56% 0.20 25);
+      --danger-subtle:oklch(96% 0.04 25);
+      --font-display:-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',system-ui,sans-serif;
+      --font-body:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',system-ui,sans-serif;
+      --font-mono:'JetBrains Mono','SF Mono','Cascadia Code',ui-monospace,Menlo,monospace;
+      --radius-sm:6px; --radius-md:10px; --radius-lg:14px;
+    }
+    *{box-sizing:border-box;margin:0;padding:0;}
+    html,body{width:1920px;height:1080px;overflow:hidden;background:var(--bg);color:var(--fg);font:15px/1.55 var(--font-body);-webkit-font-smoothing:antialiased;}
+    button{font-family:inherit;cursor:pointer;}
+    a{text-decoration:none;color:inherit;}
+
+    /* ── Top bar ─────────────────────────────────── */
+    .topbar{height:56px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 28px;gap:16px;z-index:10;position:relative;}
+    .topbar-logo{display:flex;align-items:center;gap:10px;font:600 15px/1 var(--font-display);letter-spacing:-0.01em;}
+    .topbar-logo svg{flex-shrink:0;}
+    .topbar-sep{width:1px;height:20px;background:var(--border);}
+    .topbar-nav{display:flex;gap:4px;}
+    .topbar-nav a{font:500 13.5px/1 var(--font-body);color:var(--muted);padding:8px 14px;border-radius:var(--radius-sm);transition:all .15s;}
+    .topbar-nav a:hover{color:var(--fg);background:oklch(96% .003 250);}
+    .topbar-nav a.active{color:var(--accent);background:var(--accent-subtle);}
+    .topbar-right{margin-left:auto;display:flex;align-items:center;gap:12px;}
+    .avatar{width:32px;height:32px;border-radius:50%;background:var(--accent);color:var(--accent-fg);display:grid;place-items:center;font:600 12px/1 var(--font-body);}
+    .topbar-back{display:flex;align-items:center;gap:6px;font:500 13px/1 var(--font-body);color:var(--muted);padding:6px 12px;border-radius:var(--radius-sm);transition:all .15s;border:1px solid var(--border);}
+    .topbar-back:hover{color:var(--accent);border-color:var(--accent);background:var(--accent-subtle);}
+
+    /* ── Main grid ───────────────────────────────── */
+    .main{display:grid;grid-template-columns:1fr 480px;height:calc(1080px - 56px);}
+
+    /* ── Question panel ──────────────────────────── */
+    .q-panel{display:flex;flex-direction:column;overflow:hidden;}
+    .q-panel-scroll{flex:1;overflow-y:auto;padding:32px 48px 24px;}
+    .q-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;}
+    .q-head-left{display:flex;align-items:center;gap:12px;}
+    .q-num{font:700 22px/1 var(--font-display);color:var(--fg);}
+    .q-total{font:400 14px/1 var(--font-body);color:var(--muted);}
+    .q-tags{display:flex;gap:8px;}
+    .tag{font:500 11.5px/1 var(--font-body);padding:4px 10px;border-radius:999px;border:1px solid var(--border);color:var(--muted);background:var(--surface);}
+    .tag.diff-easy{color:oklch(42% .12 155);border-color:oklch(85% .06 155);background:oklch(96% .03 155);}
+    .tag.diff-med{color:oklch(52% .12 80);border-color:oklch(85% .06 80);background:oklch(96% .03 80);}
+    .tag.diff-hard{color:oklch(48% .14 25);border-color:oklch(85% .06 25);background:oklch(96% .03 25);}
+    .tag.bloom{color:oklch(50% .10 300);border-color:oklch(88% .04 300);background:oklch(97% .02 300);}
+    .q-nav{display:flex;gap:6px;}
+    .q-nav button{width:34px;height:34px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--muted);font:500 13px/1 var(--font-body);transition:all .15s;display:grid;place-items:center;}
+    .q-nav button:hover{border-color:var(--accent);color:var(--accent);}
+    .q-nav button:disabled{opacity:.3;cursor:default;}
+
+    .progress{display:flex;gap:6px;margin-bottom:28px;}
+    .progress-dot{width:100%;height:4px;border-radius:2px;background:var(--border);transition:background .2s;}
+    .progress-dot.done{background:var(--success);}
+    .progress-dot.current{background:var(--accent);}
+
+    .q-body{margin-bottom:28px;}
+    .q-title{font:600 20px/1.4 var(--font-display);color:var(--fg);margin-bottom:16px;letter-spacing:-0.01em;}
+    .q-context{font:400 15px/1.7 var(--font-body);color:oklch(40% .012 250);margin-bottom:12px;}
+    .q-code{font:13.5px/1.65 var(--font-mono);background:oklch(22% .015 250);color:oklch(88% .01 250);padding:18px 22px;border-radius:var(--radius-md);white-space:pre;overflow-x:auto;margin:16px 0;border:1px solid oklch(30% .015 250);}
+
+    /* ── Input mode tabs ─────────────────────────── */
+    .mode-bar{display:flex;align-items:center;gap:4px;margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--border);}
+    .mode-tab{display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--radius-sm);border:1px solid transparent;background:transparent;color:var(--muted);font:500 13px/1 var(--font-body);transition:all .15s;}
+    .mode-tab:hover{color:var(--fg);background:oklch(96% .003 250);}
+    .mode-tab.active{color:var(--accent);background:var(--accent-subtle);border-color:oklch(88% .04 255);}
+    .mode-tab svg{flex-shrink:0;opacity:.7;}
+    .mode-label{font:500 12px/1 var(--font-body);color:var(--muted);margin-left:auto;}
+
+    /* ── Choice cards ────────────────────────────── */
+    .choices{display:flex;flex-direction:column;gap:10px;margin-bottom:24px;}
+    .choice{display:flex;gap:14px;padding:14px 18px;border:1.5px solid var(--border);border-radius:var(--radius-md);background:var(--surface);cursor:pointer;transition:all .15s;}
+    .choice:hover{border-color:oklch(80% .02 250);}
+    .choice.selected{border-color:var(--accent);background:var(--accent-subtle);}
+    .choice.correct{border-color:var(--success);background:var(--success-subtle);}
+    .choice.wrong{border-color:var(--danger);background:var(--danger-subtle);}
+    .choice-letter{width:28px;height:28px;border-radius:50%;border:1.5px solid var(--border);display:grid;place-items:center;font:600 13px/1 var(--font-mono);color:var(--muted);flex-shrink:0;transition:all .15s;}
+    .choice.selected .choice-letter{border-color:var(--accent);color:var(--accent);background:oklch(92% .04 255);}
+    .choice.correct .choice-letter{border-color:var(--success);color:var(--success);background:oklch(92% .06 155);}
+    .choice.wrong .choice-letter{border-color:var(--danger);color:var(--danger);background:oklch(92% .06 25);}
+    .choice-body{flex:1;}
+    .choice-text{font:400 15px/1.5 var(--font-body);color:var(--fg);}
+    .choice-sub{font:400 12.5px/1.5 var(--font-body);color:var(--muted);margin-top:4px;}
+
+    /* ── Text / Code / Upload / DragDrop ─────────── */
+    .text-area{width:100%;min-height:120px;padding:14px 18px;border:1.5px solid var(--border);border-radius:var(--radius-md);background:var(--surface);font:400 15px/1.65 var(--font-body);color:var(--fg);resize:vertical;transition:border-color .15s;margin-bottom:24px;}
+    .text-area:focus{outline:none;border-color:var(--accent);}
+    .text-area::placeholder{color:oklch(68% .01 250);}
+    .code-wrap{margin-bottom:24px;border:1.5px solid oklch(30% .015 250);border-radius:var(--radius-md);overflow:hidden;}
+    .code-head{display:flex;align-items:center;justify-content:space-between;padding:8px 16px;background:oklch(26% .015 250);border-bottom:1px solid oklch(32% .015 250);}
+    .code-lang{font:500 12px/1 var(--font-mono);color:oklch(68% .02 250);}
+    .code-actions{display:flex;gap:8px;}
+    .code-btn{font:500 11.5px/1 var(--font-body);color:oklch(62% .02 250);background:none;border:none;padding:4px 8px;border-radius:4px;transition:all .15s;}
+    .code-btn:hover{color:oklch(85% .02 250);background:oklch(32% .015 250);}
+    .code-edit{width:100%;min-height:160px;padding:16px 18px;background:oklch(22% .015 250);border:none;font:13.5px/1.65 var(--font-mono);color:oklch(88% .01 250);resize:vertical;tab-size:4;}
+    .code-edit:focus{outline:none;}
+    .code-edit::placeholder{color:oklch(45% .02 250);}
+    .code-tests{padding:12px 18px;background:oklch(19% .012 250);border-top:1px solid oklch(30% .015 250);display:flex;align-items:center;gap:10px;}
+    .code-tests-label{font:500 11.5px/1 var(--font-mono);color:oklch(55% .02 250);}
+    .code-tests-val{font:400 12px/1.4 var(--font-mono);color:oklch(72% .02 250);}
+    .upload{border:1.5px dashed var(--border);border-radius:var(--radius-md);padding:36px;text-align:center;transition:all .2s;margin-bottom:24px;cursor:pointer;}
+    .upload:hover{border-color:var(--accent);background:var(--accent-subtle);}
+    .upload-icon{margin-bottom:12px;opacity:.35;}
+    .upload-text{font:400 14px/1.5 var(--font-body);color:var(--muted);margin-bottom:4px;}
+    .upload-hint{font:400 12px/1 var(--font-body);color:oklch(68% .01 250);}
+    .upload-formats{display:flex;gap:8px;justify-content:center;margin-top:14px;}
+    .fmt{font:500 11px/1 var(--font-mono);padding:3px 8px;border-radius:4px;background:oklch(96% .003 250);color:var(--muted);border:1px solid var(--border);}
+    .dd-zone{padding:18px;border:1.5px dashed var(--border);border-radius:var(--radius-md);background:oklch(98% .002 250);min-height:80px;margin-bottom:12px;transition:all .2s;}
+    .dd-zone.over{border-color:var(--accent);background:var(--accent-subtle);}
+    .dd-zone-label{font:500 12px/1 var(--font-body);color:var(--muted);margin-bottom:10px;}
+    .dd-chips{display:flex;flex-wrap:wrap;gap:8px;}
+    .dd-chip{padding:8px 16px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);font:500 13px/1 var(--font-mono);color:var(--fg);cursor:grab;transition:all .15s;user-select:none;}
+    .dd-chip:hover{border-color:var(--accent);}
+    .dd-chip.placed{opacity:.4;cursor:default;}
+    .dd-slots{display:flex;flex-direction:column;gap:8px;margin-bottom:24px;}
+    .dd-slot{display:flex;align-items:center;gap:12px;padding:12px 16px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);min-height:44px;}
+    .dd-slot-label{font:500 12px/1 var(--font-body);color:var(--muted);flex-shrink:0;min-width:64px;}
+    .dd-slot-chip{padding:6px 14px;border:1.5px solid var(--accent);border-radius:var(--radius-sm);background:var(--accent-subtle);font:500 13px/1 var(--font-mono);color:var(--accent);cursor:pointer;}
+
+    /* ── Action bar ──────────────────────────────── */
+    .action-bar{padding:14px 48px;border-top:1px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+    .action-left{display:flex;align-items:center;gap:12px;}
+    .btn-hint{display:flex;align-items:center;gap:6px;padding:8px 16px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--muted);font:500 13px/1 var(--font-body);transition:all .15s;}
+    .btn-hint:hover{border-color:var(--warning);color:oklch(50% .12 80);}
+    .btn-hint:disabled{opacity:.4;cursor:default;border-color:var(--border);color:var(--muted);}
+    .hint-badge{width:18px;height:18px;border-radius:50%;background:var(--warning);color:#fff;display:grid;place-items:center;font:700 10px/1 var(--font-body);}
+    .action-right{display:flex;gap:8px;}
+    .btn-primary{padding:10px 28px;background:var(--accent);color:var(--accent-fg);border:none;border-radius:var(--radius-sm);font:600 14px/1 var(--font-body);transition:all .15s;}
+    .btn-primary:hover{filter:brightness(1.08);}
+    .btn-primary:disabled{opacity:.4;cursor:default;filter:none;}
+    .btn-secondary{padding:10px 20px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--fg);font:500 14px/1 var(--font-body);transition:all .15s;}
+    .btn-secondary:hover{border-color:oklch(80% .02 250);}
+
+    /* ══════════════════════════════════════════════
+       RIGHT PANEL — Two-phase analysis
+       ══════════════════════════════════════════════ */
+    .analysis{display:flex;flex-direction:column;background:var(--surface);border-left:1px solid var(--border);overflow:hidden;}
+
+    .phase-head{padding:18px 24px 14px;border-bottom:1px solid var(--border);flex-shrink:0;}
+    .phase-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:999px;font:600 12px/1 var(--font-mono);letter-spacing:0.04em;text-transform:uppercase;}
+    .phase-badge.pre{background:var(--accent-subtle);color:var(--accent);border:1px solid oklch(88% .04 255);}
+    .phase-badge.post-correct{background:var(--success-subtle);color:oklch(38% .12 155);border:1px solid oklch(82% .06 155);}
+    .phase-badge.post-wrong{background:var(--danger-subtle);color:oklch(42% .16 25);border:1px solid oklch(82% .06 25);}
+    .phase-badge svg{flex-shrink:0;}
+    .phase-title{font:600 16px/1.3 var(--font-display);color:var(--fg);margin-top:12px;}
+    .phase-sub{font:400 13px/1.5 var(--font-body);color:var(--muted);margin-top:4px;}
+
+    .analysis-scroll{flex:1;overflow-y:auto;padding:20px 24px;}
+
+    .a-section{margin-bottom:20px;}
+    .a-section-title{font:600 12px/1 var(--font-mono);color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+    .a-section-title svg{flex-shrink:0;opacity:.6;}
+    .a-section-title::after{content:'';flex:1;height:1px;background:var(--border);}
+
+    /* Pre-submission: Approach card */
+    .approach-card{padding:16px;border:1px solid oklch(88% .04 255);border-radius:var(--radius-md);background:oklch(98% .008 255);}
+    .approach-label{font:600 13px/1 var(--font-display);color:var(--accent);margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+    .approach-text{font:400 13.5px/1.65 var(--font-body);color:oklch(38% .015 250);}
+
+    /* Pre-submission: Hint cards */
+    .hint-card{padding:14px 16px;border:1px solid var(--border);border-radius:var(--radius-md);background:var(--surface);margin-bottom:8px;transition:all .2s;}
+    .hint-card.locked{opacity:.45;border-style:dashed;}
+    .hint-head{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+    .hint-num{width:22px;height:22px;border-radius:50%;background:oklch(93% .02 80);color:oklch(50% .10 80);display:grid;place-items:center;font:600 11px/1 var(--font-mono);flex-shrink:0;}
+    .hint-card.unlocked .hint-num{background:var(--warning-subtle);color:oklch(45% .12 80);}
+    .hint-label{font:500 12px/1 var(--font-body);color:var(--muted);}
+    .hint-text{font:400 13.5px/1.6 var(--font-body);color:oklch(35% .015 250);padding-left:30px;}
+    .hint-locked-text{font:400 12.5px/1 var(--font-body);color:var(--muted);padding-left:30px;font-style:italic;}
+
+    /* Pre-submission: Knowledge preview */
+    .k-preview{display:flex;flex-direction:column;gap:8px;}
+    .k-item{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);transition:all .15s;}
+    .k-item:hover{border-color:oklch(85% .03 250);}
+    .k-icon{width:28px;height:28px;border-radius:6px;background:oklch(96% .008 250);display:grid;place-items:center;font-size:14px;flex-shrink:0;}
+    .k-body{flex:1;}
+    .k-name{font:600 13px/1 var(--font-display);color:var(--fg);}
+    .k-desc{font:400 12px/1.5 var(--font-body);color:var(--muted);margin-top:3px;}
+
+    /* Post-submission: Result banner */
+    .result-banner{padding:20px;border-radius:var(--radius-md);margin-bottom:20px;display:flex;align-items:flex-start;gap:16px;}
+    .result-banner.correct{background:var(--success-subtle);border:1.5px solid oklch(82% .06 155);}
+    .result-banner.wrong{background:var(--danger-subtle);border:1.5px solid oklch(82% .06 25);}
+    .result-icon{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;flex-shrink:0;}
+    .result-banner.correct .result-icon{background:oklch(52% .15 155);}
+    .result-banner.wrong .result-icon{background:oklch(56% .20 25);}
+    .result-body{flex:1;}
+    .result-verdict{font:700 18px/1.2 var(--font-display);margin-bottom:4px;}
+    .result-banner.correct .result-verdict{color:oklch(35% .12 155);}
+    .result-banner.wrong .result-verdict{color:oklch(40% .16 25);}
+    .result-detail{font:400 13.5px/1.6 var(--font-body);color:oklch(35% .015 250);}
+    .result-answer{display:inline-flex;align-items:center;gap:6px;margin-top:8px;padding:4px 12px;border-radius:var(--radius-sm);font:600 13px/1 var(--font-mono);}
+    .result-banner.correct .result-answer{background:oklch(90% .06 155);color:oklch(32% .10 155);}
+    .result-banner.wrong .result-answer{background:oklch(90% .06 25);color:oklch(35% .14 25);}
+
+    /* Post-submission: Steps */
+    .steps-list{display:flex;flex-direction:column;gap:0;}
+    .step-row{display:flex;gap:12px;padding:12px 0;position:relative;}
+    .step-row+.step-row{border-top:1px solid oklch(94% .003 250);}
+    .step-row::before{content:'';position:absolute;left:11px;top:36px;bottom:-2px;width:1.5px;background:var(--border);}
+    .step-row:last-child::before{display:none;}
+    .step-n{width:24px;height:24px;border-radius:50%;background:oklch(93% .01 250);color:var(--muted);display:grid;place-items:center;font:600 11px/1 var(--font-mono);flex-shrink:0;position:relative;z-index:1;}
+    .step-row.key .step-n{background:var(--accent);color:var(--accent-fg);}
+    .step-text{font:400 13.5px/1.6 var(--font-body);color:oklch(35% .015 250);padding-top:2px;}
+    .step-row.key .step-text{color:var(--fg);font-weight:500;}
+    .step-key-badge{font:500 10px/1 var(--font-mono);color:var(--accent);background:var(--accent-subtle);padding:2px 6px;border-radius:4px;margin-left:6px;vertical-align:middle;}
+
+    /* Post-submission: Deep analysis */
+    .deep-card{padding:16px;border:1px solid var(--border);border-radius:var(--radius-md);background:var(--surface);}
+    .deep-text{font:400 13.5px/1.7 var(--font-body);color:oklch(38% .015 250);}
+    .deep-text strong{font-weight:600;color:var(--fg);}
+
+    /* Post-submission: Pitfalls */
+    .pitfall{display:flex;gap:10px;padding:10px 14px;border-radius:var(--radius-sm);background:oklch(97% .02 80);border:1px solid oklch(90% .04 80);margin-bottom:8px;}
+    .pitfall-icon{flex-shrink:0;margin-top:1px;}
+    .pitfall-text{font:400 13px/1.6 var(--font-body);color:oklch(38% .015 250);}
+
+    /* Post-submission: Next steps */
+    .next-actions{display:flex;flex-direction:column;gap:8px;margin-top:4px;}
+    .next-btn{display:flex;align-items:center;gap:10px;padding:12px 16px;border:1px solid var(--border);border-radius:var(--radius-md);background:var(--surface);color:var(--fg);font:500 13.5px/1 var(--font-body);transition:all .15s;text-align:left;}
+    .next-btn:hover{border-color:var(--accent);background:var(--accent-subtle);}
+    .next-btn-icon{width:28px;height:28px;border-radius:6px;background:oklch(96% .008 250);display:grid;place-items:center;flex-shrink:0;}
+    .next-btn-text{flex:1;}
+    .next-btn-arrow{color:var(--muted);font-size:14px;transition:transform .15s;}
+    .next-btn:hover .next-btn-arrow{transform:translateX(2px);color:var(--accent);}
+
+    /* ── Summary card ────────────────────────────── */
+    .summary-card{padding:24px;border:1px solid var(--border);border-radius:var(--radius-md);background:var(--surface);text-align:center;}
+    .summary-score{font:700 48px/1 var(--font-display);color:var(--fg);margin-bottom:4px;}
+    .summary-label{font:400 13px/1 var(--font-body);color:var(--muted);margin-bottom:16px;}
+    .summary-stats{display:flex;justify-content:center;gap:24px;margin-bottom:16px;}
+    .summary-stat{text-align:center;}
+    .summary-stat-val{font:600 18px/1 var(--font-display);color:var(--fg);}
+    .summary-stat-label{font:400 11px/1 var(--font-body);color:var(--muted);margin-top:4px;}
+    .summary-bar{height:6px;border-radius:3px;background:var(--border);overflow:hidden;margin-bottom:16px;}
+    .summary-bar-fill{height:100%;border-radius:3px;transition:width .4s;}
+    .summary-actions{display:flex;gap:8px;justify-content:center;margin-top:16px;}
+
+    /* Scrollbars */
+    ::-webkit-scrollbar{width:6px;}
+    ::-webkit-scrollbar-track{background:transparent;}
+    ::-webkit-scrollbar-thumb{background:oklch(85% .005 250);border-radius:3px;}
+    ::-webkit-scrollbar-thumb:hover{background:oklch(75% .01 250);}
+  </style>
+</head>
+<body>
+
+  <!-- ── Top bar ──────────────────────────────────── -->
+  <header class="topbar">
+    <div class="topbar-logo">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect width="24" height="24" rx="6" fill="oklch(56% 0.19 255)"/><path d="M7 8h10M7 12h7M7 16h4" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+      <span>LearnAI</span>
+    </div>
+    <div class="topbar-sep"></div>
+    <nav class="topbar-nav">
+      <a href="刷题.html">学习首页</a>
+      <a href="#">知识图谱</a>
+      <a href="#">计划规划</a>
+      <a href="刷题.html" class="active">刷题练习</a>
+      <a href="#">资源中心</a>
+    </nav>
+    <div class="topbar-right">
+      <a class="topbar-back" href="刷题.html">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 3L5 7l4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        返回列表
+      </a>
+      <div class="avatar">ZL</div>
+    </div>
+  </header>
+
+  <!-- ── Main ─────────────────────────────────────── -->
+  <div class="main">
+
+    <!-- ── Left: Question panel ────────────────── -->
+    <section class="q-panel">
+      <div class="q-panel-scroll" id="qScroll">
+        <div class="q-head">
+          <div class="q-head-left">
+            <span class="q-num" id="qNum">Q1</span>
+            <span class="q-total" id="qTotal">/ 5 题</span>
+            <div class="q-tags" id="qTags"></div>
+          </div>
+          <div class="q-nav">
+            <button id="btnPrev" aria-label="上一题">‹</button>
+            <button id="btnNext" aria-label="下一题">›</button>
+          </div>
+        </div>
+        <div class="progress" id="progress"></div>
+        <div class="q-body" id="qBody"></div>
+        <div class="mode-bar" id="modeBar"></div>
+        <div id="inputArea"></div>
+      </div>
+      <div class="action-bar">
+        <div class="action-left">
+          <button class="btn-hint" id="btnHint">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.5"/><path d="M7 5v3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="7" cy="10" r=".75" fill="currentColor"/></svg>
+            请求提示
+            <span class="hint-badge" id="hintBadge" style="display:none">0</span>
+          </button>
+        </div>
+        <div class="action-right">
+          <button class="btn-secondary" id="btnSkip">跳过</button>
+          <button class="btn-primary" id="btnSubmit">提交答案</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Right: Two-phase analysis panel ───── -->
+    <aside class="analysis">
+      <div class="phase-head" id="phaseHead"></div>
+      <div class="analysis-scroll" id="phaseContent"></div>
+    </aside>
+  </div>
+
+  <script>
+    /* ── Data ─────────────────────────────────────── */
+    const questions = [
+      {
+        id:'q1', type:'choice', diff:'medium', bloom:'分析',
+        topic:'数据结构', plan:'数据结构与算法（进阶）',
+        title:'二叉搜索树的中序遍历结果是什么？',
+        context:'给定一棵二叉搜索树（BST），对其执行中序遍历（in-order traversal），结果序列具有什么性质？',
+        choices:[
+          {letter:'A',text:'随机序列',sub:'每次遍历结果不同',correct:false},
+          {letter:'B',text:'升序序列',sub:'从小到大排列，这是 BST 的核心性质',correct:true},
+          {letter:'C',text:'降序序列',sub:'从大到小排列',correct:false},
+          {letter:'D',text:'层序序列',sub:'按层级从上到下排列',correct:false}
+        ],
+        modes:['choice','text','image'],
+        approach:'从 BST 的插入规则出发，思考左子树、根、右子树之间的大小关系，再结合中序遍历的访问顺序推导结果。',
+        hints:['回忆 BST 的插入规则：左子树 < 根 < 右子树','中序遍历的顺序是：左 → 根 → 右','把这个规则应用到每个节点上，序列有什么特点？'],
+        steps:[
+          {text:'BST 定义：对于任意节点，左子树所有节点值 < 当前节点 < 右子树所有节点值',key:false},
+          {text:'中序遍历顺序：递归遍历左子树 → 访问根 → 递归遍历右子树',key:true},
+          {text:'由定义可知，先访问较小的左子树，再访问根，最后访问较大的右子树',key:false},
+          {text:'结论：中序遍历 BST 得到升序序列',key:false}
+        ],
+        knowledge:[
+          {icon:'🌳',title:'二叉搜索树',desc:'左小右大的有序二叉树，查找效率 O(log n)'},
+          {icon:'↻',title:'树的遍历',desc:'前序、中序、后序、层序四种基本遍历方式'},
+          {icon:'⏱',title:'时间复杂度',desc:'BST 操作平均 O(log n)，退化到 O(n)'}
+        ],
+        deepAnalysis:'二叉搜索树（BST）的核心性质是「左小右大」—— 每个节点的左子树只包含小于它的值，右子树只包含大于它的值。中序遍历按照「左 → 根 → 右」的顺序访问，天然地将这种大小关系映射为升序输出。这个性质使得 BST 可以作为一种高效的排序数据结构，同时也是理解 AVL 树、红黑树等平衡树的基础。',
+        pitfalls:['混淆中序遍历和前序遍历的访问顺序','忘记 BST 的定义中"所有"左子树节点都小于根，不仅仅是直接左孩子','在存在重复值的 BST 中，对遍历结果的判断可能出错'],
+        nextSteps:['尝试：平衡二叉树（AVL）的旋转操作','对比：红黑树与 BST 的性能差异','练习：BST 的删除操作实现']
+      },
+      {
+        id:'q2', type:'text', diff:'easy', bloom:'理解',
+        topic:'Python', plan:'Python 基础学习路径',
+        title:'Python 列表切片运算的输出结果',
+        context:'分析以下代码，写出 print 的输出结果：',
+        code:'my_list = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]\n\nprint(my_list[2:7:2])\nprint(my_list[-3:])\nprint(my_list[::-1][:3])',
+        modes:['text','image'],
+        approach:'逐个分析三个参数的含义：start（起始索引）、stop（终止索引，不包含）、step（步长）。特别注意负数索引和反向切片。',
+        hints:['切片语法 [start:stop:step]，stop 索引不包含在结果中','负数索引从末尾算起：-1 是最后一个元素','[::-1] 表示反转整个列表，[:3] 再取前三个'],
+        steps:[
+          {text:'[2:7:2]：从索引 2 到 6（不含 7），步长 2 → 取索引 2,4,6 → [3, 5, 7]',key:false},
+          {text:'[-3:]：从倒数第 3 个到末尾 → 取索引 7,8,9 → [8, 9, 10]',key:true},
+          {text:'[::-1][:3]：先反转得 [10,9,...,1]，再取前 3 个 → [10, 9, 8]',key:false}
+        ],
+        knowledge:[
+          {icon:'🐍',title:'Python 列表',desc:'动态数组，支持切片、推导式等灵活操作'},
+          {icon:'✂️',title:'切片语法',desc:'[start:stop:step] 三个参数的组合规则'}
+        ],
+        deepAnalysis:'Python 列表切片是最常用的数据操作之一。<strong>三个参数的默认值</strong>分别是 start=0、stop=len(list)、step=1。当 step 为负数时，遍历方向反转，此时 start 应大于 stop。链式切片（如 [::-1][:3]）会从左到右依次执行，先得到中间结果再进一步切片。掌握切片的关键是理解<strong>「半开区间」[start, stop)</strong>和<strong>步长方向</strong>。',
+        pitfalls:['忘记 stop 索引不包含在结果中（半开区间）','混淆负数索引的方向：-3 是倒数第三个，不是正数第三个','链式切片时以为会一步完成，实际是分两步执行'],
+        nextSteps:['练习：列表推导式与切片的结合','对比：NumPy 数组切片的异同','进阶：使用 slice 对象实现可复用的切片']
+      },
+      {
+        id:'q3', type:'code', diff:'hard', bloom:'创造',
+        topic:'算法', plan:'数据结构与算法（进阶）',
+        title:'实现快速排序的分区函数',
+        context:'补全以下快速排序代码中的 partition 函数。要求使用 Lomuto 分区方案（以最后一个元素为基准）。',
+        code:'def quicksort(arr, low, high):\n    if low < high:\n        pi = partition(arr, low, high)\n        quicksort(arr, low, pi - 1)\n        quicksort(arr, pi + 1, high)\n\ndef partition(arr, low, high):\n    # TODO: 实现 Lomuto 分区\n    # pivot = arr[high]\n    # 返回基准元素的最终位置\n    pass',
+        modes:['code','text','image'],
+        approach:'Lomuto 方案的核心是维护一个"小于区"边界指针 i，遍历数组将小于基准的元素交换到左边，最后把基准放到正确位置。',
+        hints:['设一个 i 指针追踪"小于区"的右边界，初始值 i = low - 1','遍历 j 从 low 到 high-1，遇到 arr[j] <= pivot 就 i++ 并交换 arr[i] 和 arr[j]','最后把 pivot（arr[high]）和 arr[i+1] 交换，返回 i+1'],
+        steps:[
+          {text:'选择基准：pivot = arr[high]（最后一个元素）',key:false},
+          {text:'初始化指针 i = low - 1，标记小于区的右边界',key:false},
+          {text:'遍历 j 从 low 到 high-1，若 arr[j] <= pivot，则 i++ 并交换 arr[i] 和 arr[j]',key:true},
+          {text:'最后交换 arr[i+1] 和 arr[high]，返回 i+1',key:false}
+        ],
+        knowledge:[
+          {icon:'⚡',title:'快速排序',desc:'分治策略，平均 O(n log n)，最坏 O(n²)'},
+          {icon:'↔️',title:'Lomuto vs Hoare',desc:'两种分区方案，Hoare 交换次数更少'},
+          {icon:'📊',title:'时间复杂度',desc:'随机化基准选择可避免最坏情况'}
+        ],
+        deepAnalysis:'Lomuto 分区方案以简洁著称，特别适合教学场景。其核心思想是<strong>维护两个指针</strong>：i 追踪"小于等于区"的右边界，j 从左到右扫描。每次 arr[j] <= pivot 时，扩大小于区（i++）并交换。遍历完成后，pivot 被放到 i+1 位置，左边全部 <= pivot，右边全部 > pivot。虽然 Lomuto 的交换次数比 Hoare 方案多，但逻辑更直观，不容易写错边界条件。',
+        pitfalls:['i 的初始值写成 low 而不是 low-1，导致分区结果偏移','遍历范围包含 high（应该是 low 到 high-1）','忘记最后一步交换 pivot 到正确位置','当所有元素相等时的退化问题'],
+        nextSteps:['实现 Hoare 分区方案并对比','练习：三路快排（处理重复元素）','挑战：随机化基准选择']
+      },
+      {
+        id:'q4', type:'choice', diff:'medium', bloom:'评价',
+        topic:'机器学习', plan:'机器学习数学基础',
+        title:'模型评估指标的选择',
+        context:'在一个医疗诊断场景中，你需要构建一个模型来检测罕见疾病（发病率 0.1%）。以下哪种评估策略最合理？',
+        modes:['choice','text','image'],
+        choices:[
+          {letter:'A',text:'准确率（Accuracy）',sub:'整体预测正确的比例',correct:false},
+          {letter:'B',text:'召回率优先（Recall）',sub:'宁可误诊也不能漏诊 — 医疗场景的首要目标',correct:true},
+          {letter:'C',text:'精确率优先（Precision）',sub:'确保每次诊断都准确',correct:false},
+          {letter:'D',text:'F1 分数',sub:'精确率和召回率的调和平均',correct:false}
+        ],
+        approach:'从医疗场景的实际后果出发 —— 漏诊（假阴性）和误诊（假阳性）哪个代价更高？用这个判断来选择优先优化的指标。',
+        hints:['0.1% 发病率 → 即使全部预测"健康"，accuracy 也有 99.9%，但毫无意义','漏诊（假阴性）：患者得不到治疗，可能危及生命 — 代价极高','误诊（假阳性）：多做一次检查 — 代价相对较低'],
+        steps:[
+          {text:'发病率 0.1% → 即使全部预测为"健康"，准确率也有 99.9%，但模型毫无价值',key:false},
+          {text:'假阴性（漏诊）代价 >> 假阳性（误诊）代价 → 需要最小化假阴性',key:true},
+          {text:'召回率 = TP/(TP+FN)，直接衡量"找出了多少真正的患者"',key:false},
+          {text:'结论：医疗场景应优先召回率，辅以 Precision 和 F1 做平衡',key:false}
+        ],
+        knowledge:[
+          {icon:'📈',title:'混淆矩阵',desc:'TP、FP、TN、FN 四个基础指标及其关系'},
+          {icon:'🎯',title:'Precision vs Recall',desc:'精确率关注误诊（FP），召回率关注漏诊（FN）'},
+          {icon:'⚖️',title:'不平衡数据',desc:'SMOTE、欠采样、代价敏感学习等处理策略'}
+        ],
+        deepAnalysis:'在高度不平衡的数据集中（如罕见疾病检测），<strong>准确率（Accuracy）是最具误导性的指标</strong>。当正样本仅占 0.1% 时，一个"永远预测健康"的模型也有 99.9% 的准确率，但它完全无法检测出任何患者。召回率（Recall = TP / (TP + FN)）衡量的是"在所有真正的患者中，模型找出了多少"。在医疗场景中，漏诊的代价（患者得不到治疗）远高于误诊（多做一次复查），因此应优先最大化召回率。实际工程中常用 Precision-Recall 曲线（而非 ROC 曲线）来评估不平衡数据的模型性能。',
+        pitfalls:['被 99.9% 的准确率误导，忽略类别不平衡问题','混淆 Precision 和 Recall 的含义：Precision 关注"预测为正的里面有多少真的正"','不考虑场景代价，机械地选择 F1 作为"折中"方案'],
+        nextSteps:['练习：计算混淆矩阵的各指标','对比：ROC 曲线 vs PR 曲线在不平衡数据上的表现','进阶：代价敏感学习的实现']
+      },
+      {
+        id:'q5', type:'dragdrop', diff:'medium', bloom:'应用',
+        topic:'机器学习', plan:'机器学习数学基础',
+        title:'决策树节点排列',
+        context:'将以下条件节点拖放到正确位置，构建一个判断"是否适合户外运动"的决策树。根节点应该是最具信息增益的特征。',
+        modes:['dragdrop','text','image'],
+        dragItems:['天气=晴朗','温度<35°C','湿度<70%','适合运动','不适合运动'],
+        dragSlots:['根节点（最高信息增益）','左分支条件','右分支条件','叶节点 1','叶节点 2'],
+        approach:'信息增益 = 划分前的熵 - 划分后的加权熵。选择能最有效区分"适合"和"不适合"的特征作为根节点。',
+        hints:['信息增益衡量每个特征对分类结果的贡献度','天气是最强的决定因素 —— 非晴天时通常直接不适合户外运动','叶节点放最终的分类结果（适合 / 不适合）'],
+        steps:[
+          {text:'计算各特征的信息增益，天气的信息增益最大 → 作为根节点',key:true},
+          {text:'天气=晴朗 → 继续检查温度和湿度条件',key:false},
+          {text:'温度<35°C 且 湿度<70% → 适合运动',key:false},
+          {text:'天气≠晴朗 或 温度/湿度超标 → 不适合运动',key:false}
+        ],
+        knowledge:[
+          {icon:'🌲',title:'决策树',desc:'基于特征条件进行递归分类的树形模型'},
+          {icon:'📐',title:'信息增益',desc:'衡量特征对分类结果的贡献度，ID3 算法的核心'},
+          {icon:'🎲',title:'熵',desc:'度量数据集不确定性：H = -Σ p·log₂(p)'}
+        ],
+        deepAnalysis:'决策树的构建核心是<strong>特征选择</strong>—— 每一步选择信息增益最大的特征来分裂数据。信息增益 = 父节点的熵 - 子节点的加权熵。在这个场景中，"天气"是最具判别力的特征：如果天气不好，直接判定为"不适合运动"，无需检查其他条件。只有天气晴朗时，才需要进一步检查温度和湿度。这种"分层过滤"的思想是决策树算法（ID3、C4.5、CART）的共同基础。',
+        pitfalls:['混淆信息增益和基尼不纯度的选择标准','把中间条件和叶节点搞混 —— 叶节点只能是最终分类结果','忽视信息增益的计算需要基于训练数据的实际分布'],
+        nextSteps:['练习：手动计算信息增益','对比：ID3、C4.5、CART 三种算法的差异','进阶：随机森林如何避免决策树过拟合']
+      }
+    ];
+
+    /* ── State ────────────────────────────────────── */
+    let curIdx = 0;
+    let answers = {};
+    let submitted = {};
+    let activeMode = {};
+    let hintsUsed = {};
+    let startTime = Date.now();
+
+    /* ── Helpers ──────────────────────────────────── */
+    function cur(){ return questions[curIdx]; }
+    function qId(){ return cur().id; }
+    function curMode(){ return activeMode[qId()] || cur().modes[0]; }
+    function escHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+    function isCorrect(){
+      const qd = cur();
+      const id = qId();
+      if(qd.type === 'choice'){
+        const correct = qd.choices.find(function(c){ return c.correct; });
+        return correct && answers[id] === correct.letter;
+      }
+      return false;
+    }
+
+    function allDone(){
+      return questions.every(function(q){ return submitted[q.id]; });
+    }
+
+    /* ── Left panel renders ──────────────────────── */
+    function renderProgress(){
+      document.getElementById('progress').innerHTML = questions.map(function(_, i){
+        var id = questions[i].id;
+        var cls = i === curIdx ? 'current' : submitted[id] ? 'done' : '';
+        return '<div class="progress-dot ' + cls + '"></div>';
+      }).join('');
+    }
+
+    function renderHead(){
+      var qd = cur();
+      document.getElementById('qNum').textContent = 'Q' + (curIdx + 1);
+      document.getElementById('qTotal').textContent = '/ ' + questions.length + ' 题';
+      var diffCls = qd.diff === 'easy' ? 'easy' : qd.diff === 'hard' ? 'hard' : 'med';
+      var diffText = qd.diff === 'easy' ? '简单' : qd.diff === 'hard' ? '困难' : '中等';
+      document.getElementById('qTags').innerHTML =
+        '<span class="tag">' + qd.topic + '</span>' +
+        '<span class="tag diff-' + diffCls + '">' + diffText + '</span>' +
+        '<span class="tag bloom">Bloom · ' + qd.bloom + '</span>';
+      document.getElementById('btnPrev').disabled = curIdx === 0;
+      document.getElementById('btnNext').disabled = curIdx === questions.length - 1;
+    }
+
+    function renderBody(){
+      var qd = cur();
+      var h = '<div class="q-title">' + qd.title + '</div>';
+      if(qd.context) h += '<div class="q-context">' + qd.context + '</div>';
+      if(qd.code) h += '<pre class="q-code">' + escHtml(qd.code) + '</pre>';
+      document.getElementById('qBody').innerHTML = h;
+    }
+
+    function renderModeBar(){
+      var qd = cur();
+      var MODES = {
+        choice:{label:'选择题',icon:'<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="4" cy="4" r="2" stroke="currentColor" stroke-width="1.3"/><circle cx="4" cy="10" r="2" stroke="currentColor" stroke-width="1.3"/><path d="M8 4h5M8 10h5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>'},
+        text:{label:'文字作答',icon:'<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 3h10M2 7h7M2 11h4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>'},
+        code:{label:'代码编辑',icon:'<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M4 3L1 7l3 4M10 3l3 4-3 4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>'},
+        image:{label:'图片/手写',icon:'<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1.5" y="2.5" width="11" height="9" rx="1.5" stroke="currentColor" stroke-width="1.3"/><circle cx="5" cy="6" r="1.2" stroke="currentColor" stroke-width="1"/><path d="M1.5 10l3-3 2 2 3-3 3 3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>'},
+        dragdrop:{label:'拖拽排列',icon:'<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.3"/><rect x="8" y="1" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.3"/><rect x="1" y="8" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.3"/><rect x="8" y="8" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.3"/></svg>'}
+      };
+      var cm = curMode();
+      document.getElementById('modeBar').innerHTML = qd.modes.map(function(m){
+        var cfg = MODES[m];
+        return '<button class="mode-tab ' + (m === cm ? 'active' : '') + '" data-mode="' + m + '">' + cfg.icon + '<span>' + cfg.label + '</span></button>';
+      }).join('') + '<span class="mode-label">多模态输入</span>';
+    }
+
+    function renderInput(){
+      var qd = cur();
+      var m = curMode();
+      var id = qId();
+      var h = '';
+
+      if(m === 'choice' && qd.choices){
+        var ans = answers[id];
+        h = '<div class="choices">' + qd.choices.map(function(c){
+          var cls = 'choice';
+          if(submitted[id]){
+            if(c.correct) cls += ' correct';
+            else if(ans === c.letter) cls += ' wrong';
+          } else if(ans === c.letter) cls += ' selected';
+          return '<div class="' + cls + '" data-letter="' + c.letter + '">' +
+            '<div class="choice-letter">' + c.letter + '</div>' +
+            '<div class="choice-body"><div class="choice-text">' + c.text + '</div>' +
+            (c.sub ? '<div class="choice-sub">' + c.sub + '</div>' : '') +
+            '</div></div>';
+        }).join('') + '</div>';
+      }
+      else if(m === 'text'){
+        h = '<textarea class="text-area" placeholder="在此输入你的答案…" ' + (submitted[id] ? 'disabled' : '') + '>' + (answers[id] || '') + '</textarea>';
+      }
+      else if(m === 'code'){
+        h = '<div class="code-wrap">' +
+          '<div class="code-head"><span class="code-lang">Python 3.11</span>' +
+          '<div class="code-actions"><button class="code-btn">⟲ 重置</button><button class="code-btn">▶ 运行</button></div></div>' +
+          '<textarea class="code-edit" placeholder="在此编写代码…" ' + (submitted[id] ? 'disabled' : '') + '>' + (answers[id] || '') + '</textarea>' +
+          '<div class="code-tests"><span class="code-tests-label">测试用例</span><span class="code-tests-val">3 个隐藏用例 · 提交后自动评测</span></div>' +
+          '</div>';
+      }
+      else if(m === 'image'){
+        h = '<div class="upload">' +
+          '<div class="upload-icon"><svg width="40" height="40" viewBox="0 0 40 40" fill="none"><rect x="4" y="8" width="32" height="24" rx="3" stroke="currentColor" stroke-width="2"/><path d="M4 26l8-8 6 6 8-8 10 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="14" cy="16" r="3" stroke="currentColor" stroke-width="2"/></svg></div>' +
+          '<div class="upload-text">拍照上传手写答案，或截图粘贴草稿</div>' +
+          '<div class="upload-hint">系统会自动识别手写内容并分析</div>' +
+          '<div class="upload-formats"><span class="fmt">JPG</span><span class="fmt">PNG</span><span class="fmt">HEIC</span><span class="fmt">粘贴截图</span></div>' +
+          '</div>';
+      }
+      else if(m === 'dragdrop' && qd.dragItems){
+        var placed = answers[id] || {};
+        var usedItems = Object.values(placed);
+        h = '<div class="dd-zone" id="ddPool">' +
+          '<div class="dd-zone-label">可用节点 — 拖到下方位置</div>' +
+          '<div class="dd-chips">' + qd.dragItems.map(function(item){
+            return '<div class="dd-chip ' + (usedItems.includes(item) ? 'placed' : '') + '" draggable="true" data-item="' + item + '">' + item + '</div>';
+          }).join('') + '</div></div>' +
+          '<div class="dd-slots">' + qd.dragSlots.map(function(slot, i){
+            return '<div class="dd-slot" data-slot="' + i + '"><span class="dd-slot-label">' + slot + '</span>' +
+              (placed[i] ? '<div class="dd-slot-chip" data-slot="' + i + '">' + placed[i] + ' ✕</div>' : '') +
+              '</div>';
+          }).join('') + '</div>';
+      }
+
+      document.getElementById('inputArea').innerHTML = h;
+    }
+
+    /* ══════════════════════════════════════════════
+       RIGHT PANEL — Two-phase render
+       ══════════════════════════════════════════════ */
+    function renderPhase(){
+      var qd = cur();
+      var id = qId();
+      var isSubmitted = submitted[id];
+
+      // ── Phase header ──────────────────────────
+      var headH = '';
+      if(!isSubmitted){
+        headH =
+          '<div class="phase-badge pre">' +
+            '<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="4.5" stroke="currentColor" stroke-width="1.3"/><path d="M6 4v3l2 1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>' +
+            '答题中' +
+          '</div>' +
+          '<div class="phase-title">题目解析 · 准备阶段</div>' +
+          '<div class="phase-sub">利用提示和知识预览梳理思路，然后提交答案</div>';
+      } else {
+        var correct = isCorrect();
+        headH =
+          '<div class="phase-badge ' + (correct ? 'post-correct' : 'post-wrong') + '">' +
+            '<svg width="12" height="12" viewBox="0 0 12 12" fill="none">' +
+              (correct
+                ? '<path d="M2.5 6l2.5 2.5L9.5 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>'
+                : '<path d="M3.5 3.5l5 5M8.5 3.5l-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>') +
+            '</svg>' +
+            (correct ? '回答正确' : '回答错误') +
+          '</div>' +
+          '<div class="phase-title">题目解析 · 详解阶段</div>' +
+          '<div class="phase-sub">理解解题思路，巩固相关知识点</div>';
+      }
+      document.getElementById('phaseHead').innerHTML = headH;
+
+      // ── Phase content ─────────────────────────
+      var h = '';
+
+      // ── Summary (if all done) ─────────────────
+      if(allDone()){
+        var totalCorrect = questions.filter(function(q){
+          if(q.type === 'choice'){
+            var c = q.choices.find(function(x){ return x.correct; });
+            return c && answers[q.id] === c.letter;
+          }
+          return false;
+        }).length;
+        var pct = Math.round((totalCorrect / questions.length) * 100);
+        var elapsed = Math.round((Date.now() - startTime) / 1000);
+        var mins = Math.floor(elapsed / 60);
+        var secs = elapsed % 60;
+        var barClass = pct >= 75 ? 'good' : pct >= 50 ? 'mid' : 'low';
+        var barColor = pct >= 75 ? 'var(--success)' : pct >= 50 ? 'var(--warning)' : 'var(--danger)';
+
+        h += '<div class="summary-card">' +
+          '<div class="summary-score">' + totalCorrect + '/' + questions.length + '</div>' +
+          '<div class="summary-label">本轮练习完成</div>' +
+          '<div class="summary-bar"><div class="summary-bar-fill" style="width:' + pct + '%;background:' + barColor + '"></div></div>' +
+          '<div class="summary-stats">' +
+            '<div class="summary-stat"><div class="summary-stat-val">' + pct + '%</div><div class="summary-stat-label">正确率</div></div>' +
+            '<div class="summary-stat"><div class="summary-stat-val">' + mins + ':' + (secs < 10 ? '0' : '') + secs + '</div><div class="summary-stat-label">用时</div></div>' +
+            '<div class="summary-stat"><div class="summary-stat-val">' + Object.keys(hintsUsed).reduce(function(s,k){return s + hintsUsed[k];}, 0) + '</div><div class="summary-stat-label">使用提示</div></div>' +
+          '</div>' +
+          '<div class="summary-actions">' +
+            '<a class="btn-secondary" href="刷题.html" style="display:inline-flex;align-items:center;gap:6px;text-decoration:none;padding:10px 20px;border:1px solid var(--border);border-radius:var(--radius-sm);font:500 14px/1 var(--font-body);color:var(--fg);">返回列表</a>' +
+          '</div>' +
+        '</div>';
+        document.getElementById('phaseContent').innerHTML = h;
+        document.getElementById('phaseContent').scrollTop = 0;
+        return;
+      }
+
+      if(!isSubmitted){
+        // ═══ PRE-SUBMISSION ═══
+        if(qd.approach){
+          h += '<div class="a-section"><div class="a-section-title"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1a4 4 0 014 4c0 1.5-1 2.5-1.5 3.5S9 11 9 11H5s-.5-1.5-1-2.5S3 6.5 3 5a4 4 0 014-4z" stroke="currentColor" stroke-width="1.2"/></svg>解题思路</div>' +
+            '<div class="approach-card"><div class="approach-label"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7h10M7 2v10" stroke="var(--accent)" stroke-width="1.3" stroke-linecap="round"/></svg>建议思考方向</div><div class="approach-text">' + qd.approach + '</div></div></div>';
+        }
+        if(qd.hints && qd.hints.length > 0){
+          var used = hintsUsed[id] || 0;
+          h += '<div class="a-section"><div class="a-section-title"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.2"/><path d="M7 5v3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><circle cx="7" cy="10" r=".6" fill="currentColor"/></svg>渐进提示 (' + used + '/' + qd.hints.length + ')</div>';
+          qd.hints.forEach(function(hint, i){
+            var unlocked = i < used;
+            h += '<div class="hint-card ' + (unlocked ? 'unlocked' : 'locked') + '"><div class="hint-head"><div class="hint-num">' + (i+1) + '</div><span class="hint-label">' + (unlocked ? '提示 ' + (i+1) : '提示 ' + (i+1) + ' · 未解锁') + '</span></div>' +
+              (unlocked ? '<div class="hint-text">' + hint + '</div>' : '<div class="hint-locked-text">点击底部「请求提示」逐步揭示</div>') + '</div>';
+          });
+          h += '</div>';
+        }
+        if(qd.knowledge){
+          h += '<div class="a-section"><div class="a-section-title"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 2h4v10H2zM8 2h4v10H8z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>关联知识预览</div><div class="k-preview">';
+          qd.knowledge.forEach(function(k){
+            h += '<div class="k-item"><div class="k-icon">' + k.icon + '</div><div class="k-body"><div class="k-name">' + k.title + '</div><div class="k-desc">' + k.desc + '</div></div></div>';
+          });
+          h += '</div></div>';
+        }
+      } else {
+        // ═══ POST-SUBMISSION ═══
+        var correct = isCorrect();
+        var correctChoice = qd.choices ? qd.choices.find(function(c){ return c.correct; }) : null;
+        var resultDetail = '';
+        if(qd.type === 'choice' && correctChoice){
+          resultDetail = correct
+            ? '你正确选择了 <strong>' + answers[id] + '</strong>，对这个知识点掌握扎实。'
+            : '你的选择是 <strong>' + (answers[id] || '未作答') + '</strong>，正确答案是 <strong>' + correctChoice.letter + '</strong>。';
+        } else {
+          resultDetail = correct ? '答案正确，继续保持良好的学习状态。' : '答案需要改进，仔细阅读下面的解题步骤。';
+        }
+
+        h += '<div class="result-banner ' + (correct ? 'correct' : 'wrong') + '">' +
+          '<div class="result-icon"><svg width="22" height="22" viewBox="0 0 22 22" fill="none">' +
+            (correct ? '<path d="M5 11l4 4L17 7" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>' : '<path d="M6 6l10 10M16 6L6 16" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>') +
+          '</svg></div>' +
+          '<div class="result-body"><div class="result-verdict">' + (correct ? '回答正确' : '回答错误') + '</div><div class="result-detail">' + resultDetail + '</div>' +
+          (correctChoice ? '<div class="result-answer">正确答案：' + correctChoice.letter + ' · ' + correctChoice.text + '</div>' : '') +
+          '</div></div>';
+
+        if(qd.steps){
+          h += '<div class="a-section"><div class="a-section-title"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3.5 3.5L12 4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>解题步骤</div><div class="steps-list">';
+          qd.steps.forEach(function(s, i){
+            h += '<div class="step-row ' + (s.key ? 'key' : '') + '"><div class="step-n">' + (i+1) + '</div><div class="step-text">' + s.text + (s.key ? '<span class="step-key-badge">关键步骤</span>' : '') + '</div></div>';
+          });
+          h += '</div></div>';
+        }
+        if(qd.deepAnalysis){
+          h += '<div class="a-section"><div class="a-section-title"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 4h10M2 7h7M2 10h4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>深度解析</div><div class="deep-card"><div class="deep-text">' + qd.deepAnalysis + '</div></div></div>';
+        }
+        if(qd.pitfalls && qd.pitfalls.length > 0){
+          h += '<div class="a-section"><div class="a-section-title"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2l5.5 10H1.5L7 2z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/><path d="M7 6v2.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><circle cx="7" cy="10" r=".5" fill="currentColor"/></svg>常见误区</div>';
+          qd.pitfalls.forEach(function(p){
+            h += '<div class="pitfall"><div class="pitfall-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5.5" stroke="oklch(68% 0.14 80)" stroke-width="1.2"/><path d="M5 5l4 4M9 5l-4 4" stroke="oklch(68% 0.14 80)" stroke-width="1.2" stroke-linecap="round"/></svg></div><div class="pitfall-text">' + p + '</div></div>';
+          });
+          h += '</div>';
+        }
+        if(qd.knowledge){
+          h += '<div class="a-section"><div class="a-section-title"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 2h4v10H2zM8 2h4v10H8z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>关联知识点</div><div class="k-preview">';
+          qd.knowledge.forEach(function(k){
+            h += '<div class="k-item"><div class="k-icon">' + k.icon + '</div><div class="k-body"><div class="k-name">' + k.title + '</div><div class="k-desc">' + k.desc + '</div></div></div>';
+          });
+          h += '</div></div>';
+        }
+        if(qd.nextSteps && qd.nextSteps.length > 0){
+          h += '<div class="a-section"><div class="a-section-title"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7h10M9 4l3 3-3 3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>推荐练习</div><div class="next-actions">';
+          qd.nextSteps.forEach(function(ns){
+            h += '<button class="next-btn"><div class="next-btn-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M8 4l3 3-3 3" stroke="var(--accent)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span class="next-btn-text">' + ns + '</span><span class="next-btn-arrow">→</span></button>';
+          });
+          h += '</div></div>';
+        }
+      }
+
+      document.getElementById('phaseContent').innerHTML = h;
+      document.getElementById('phaseContent').scrollTop = 0;
+    }
+
+    /* ── Master render ───────────────────────────── */
+    function render(){
+      renderProgress();
+      renderHead();
+      renderBody();
+      renderModeBar();
+      renderInput();
+      renderPhase();
+      updateHintBadge();
+      updateActionBar();
+      document.getElementById('qScroll').scrollTop = 0;
+    }
+
+    function updateHintBadge(){
+      var used = hintsUsed[qId()] || 0;
+      var badge = document.getElementById('hintBadge');
+      badge.style.display = used > 0 ? 'grid' : 'none';
+      badge.textContent = used;
+    }
+
+    function updateActionBar(){
+      var id = qId();
+      var btnHint = document.getElementById('btnHint');
+      var btnSubmit = document.getElementById('btnSubmit');
+      var used = hintsUsed[id] || 0;
+
+      if(submitted[id]){
+        btnHint.disabled = true;
+        btnSubmit.textContent = '已提交';
+        btnSubmit.disabled = true;
+      } else {
+        btnHint.disabled = used >= cur().hints.length;
+        btnSubmit.textContent = '提交答案';
+        btnSubmit.disabled = false;
+      }
+    }
+
+    /* ── Events ───────────────────────────────────── */
+
+    // Choice selection + DD chip remove
+    document.getElementById('inputArea').addEventListener('click', function(e){
+      var choice = e.target.closest('.choice');
+      if(choice && !submitted[qId()]){
+        answers[qId()] = choice.dataset.letter;
+        renderInput();
+      }
+      var slotChip = e.target.closest('.dd-slot-chip');
+      if(slotChip && !submitted[qId()]){
+        delete answers[qId()][slotChip.dataset.slot];
+        renderInput();
+      }
+    });
+
+    // Drag-drop
+    document.getElementById('inputArea').addEventListener('dragstart', function(e){
+      if(e.target.classList.contains('dd-chip') && !e.target.classList.contains('placed')){
+        e.dataTransfer.setData('text/plain', e.target.dataset.item);
+      }
+    });
+    document.getElementById('inputArea').addEventListener('dragover', function(e){
+      var slot = e.target.closest('.dd-slot');
+      if(slot){ e.preventDefault(); slot.style.borderColor = 'var(--accent)'; slot.style.background = 'var(--accent-subtle)'; }
+    });
+    document.getElementById('inputArea').addEventListener('dragleave', function(e){
+      var slot = e.target.closest('.dd-slot');
+      if(slot){ slot.style.borderColor = ''; slot.style.background = ''; }
+    });
+    document.getElementById('inputArea').addEventListener('drop', function(e){
+      e.preventDefault();
+      var slot = e.target.closest('.dd-slot');
+      if(slot && !submitted[qId()]){
+        var item = e.dataTransfer.getData('text/plain');
+        if(!answers[qId()]) answers[qId()] = {};
+        answers[qId()][slot.dataset.slot] = item;
+        slot.style.borderColor = ''; slot.style.background = '';
+        renderInput();
+      }
+    });
+
+    // Text / code input
+    document.getElementById('inputArea').addEventListener('input', function(e){
+      if(e.target.classList.contains('text-area') || e.target.classList.contains('code-edit')){
+        answers[qId()] = e.target.value;
+      }
+    });
+
+    // Mode tabs
+    document.getElementById('modeBar').addEventListener('click', function(e){
+      var tab = e.target.closest('.mode-tab');
+      if(tab){ activeMode[qId()] = tab.dataset.mode; renderModeBar(); renderInput(); }
+    });
+
+    // Navigation
+    document.getElementById('btnPrev').addEventListener('click', function(){ if(curIdx > 0){ curIdx--; render(); } });
+    document.getElementById('btnNext').addEventListener('click', function(){ if(curIdx < questions.length - 1){ curIdx++; render(); } });
+
+    // Skip
+    document.getElementById('btnSkip').addEventListener('click', function(){
+      if(curIdx < questions.length - 1){ curIdx++; render(); }
+    });
+
+    // Hint
+    document.getElementById('btnHint').addEventListener('click', function(){
+      var id = qId();
+      var qd = cur();
+      var used = hintsUsed[id] || 0;
+      if(used < qd.hints.length){
+        hintsUsed[id] = used + 1;
+        renderPhase();
+        updateHintBadge();
+        updateActionBar();
+      }
+    });
+
+    // Submit
+    document.getElementById('btnSubmit').addEventListener('click', function(){
+      var id = qId();
+      if(submitted[id]) return;
+      submitted[id] = true;
+      render();
+    });
+
+    /* ── Init ─────────────────────────────────────── */
+    render();
+  </script>
+</body>
+</html>

@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>学径 — 学习空间</title>
+<link rel="stylesheet" href="../css/tokens.css" />
+<style>
+  body { background: var(--bg); }
+  .page-wrap { min-height: 100vh; display: flex; flex-direction: column; }
+  .page-body { flex: 1; padding: var(--sp-8) var(--sp-6); max-width: var(--content-max); margin: 0 auto; width: 100%; }
+
+  /* Greeting section */
+  .greeting {
+    margin-bottom: var(--sp-8);
+  }
+  .greeting h1 {
+    font-family: var(--font-display);
+    font-size: var(--text-3xl);
+    font-weight: 700;
+    color: var(--fg);
+    margin-bottom: var(--sp-2);
+    letter-spacing: -0.01em;
+  }
+  .greeting p { color: var(--muted); font-size: var(--text-md); }
+
+  /* Quick stats row */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--sp-4);
+    margin-bottom: var(--sp-8);
+  }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    padding: var(--sp-5);
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-1);
+  }
+  .stat-label { font-size: var(--text-xs); color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+  .stat-value { font-family: var(--font-display); font-size: var(--text-2xl); font-weight: 700; color: var(--fg); font-variant-numeric: tabular-nums; }
+  .stat-change { font-size: var(--text-xs); color: var(--secondary); font-weight: 500; }
+  .stat-change.warn { color: var(--warning); }
+
+  /* Module grid */
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--sp-5);
+  }
+  .section-header h2 {
+    font-size: var(--text-lg);
+    font-weight: 600;
+    color: var(--fg);
+  }
+  .section-header a {
+    font-size: var(--text-sm);
+    color: var(--primary);
+    font-weight: 500;
+  }
+
+  .module-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--sp-4);
+    margin-bottom: var(--sp-8);
+  }
+  .module-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    padding: var(--sp-5);
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-3);
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .module-card:hover {
+    box-shadow: var(--shadow-md);
+    border-color: var(--border-strong);
+    transform: translateY(-2px);
+    text-decoration: none;
+  }
+  .module-card .mod-icon {
+    width: 40px; height: 40px;
+    border-radius: var(--r-md);
+    display: grid;
+    place-items: center;
+  }
+  .module-card .mod-name { font-weight: 600; font-size: var(--text-md); color: var(--fg); }
+  .module-card .mod-desc { font-size: var(--text-sm); color: var(--muted); line-height: 1.5; }
+  .module-card .mod-meta {
+    font-size: var(--text-xs);
+    color: var(--muted);
+    margin-top: auto;
+    padding-top: var(--sp-3);
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+  }
+
+  /* Continue learning banner */
+  .continue-banner {
+    background: linear-gradient(135deg, oklch(46% 0.18 255), oklch(50% 0.16 270));
+    border-radius: var(--r-xl);
+    padding: var(--sp-6) var(--sp-8);
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: var(--sp-8);
+    margin-bottom: var(--sp-8);
+    position: relative;
+    overflow: hidden;
+  }
+  .continue-banner::after {
+    content: '';
+    position: absolute;
+    right: -40px;
+    top: -40px;
+    width: 200px;
+    height: 200px;
+    background: oklch(100% 0 0 / 0.08);
+    border-radius: 50%;
+  }
+  .continue-info { flex: 1; }
+  .continue-info .ci-label { font-size: var(--text-sm); opacity: 0.8; margin-bottom: var(--sp-2); }
+  .continue-info .ci-title { font-size: var(--text-xl); font-weight: 600; margin-bottom: var(--sp-1); }
+  .continue-info .ci-detail { font-size: var(--text-sm); opacity: 0.7; margin-bottom: var(--sp-4); }
+  .continue-progress { height: 4px; background: oklch(100% 0 0 / 0.2); border-radius: var(--r-full); max-width: 320px; }
+  .continue-progress-fill { height: 100%; background: white; border-radius: var(--r-full); }
+
+  /* Recent activity */
+  .activity-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-3);
+  }
+  .activity-item {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-4);
+    padding: var(--sp-4);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+    transition: background 0.15s;
+  }
+  .activity-item:hover { background: var(--surface-alt); }
+  .activity-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .activity-text { flex: 1; font-size: var(--text-sm); color: var(--fg); }
+  .activity-time { font-size: var(--text-xs); color: var(--muted); white-space: nowrap; }
+
+  @media (max-width: 900px) {
+    .stats-row { grid-template-columns: repeat(2, 1fr); }
+    .module-grid { grid-template-columns: repeat(2, 1fr); }
+    .continue-banner { flex-direction: column; gap: var(--sp-4); }
+  }
+  @media (max-width: 600px) {
+    .stats-row { grid-template-columns: 1fr; }
+    .module-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+  <div id="nav-slot" data-active="home"></div>
+  <div class="page-wrap">
+    <div class="page-body">
+      <!-- Greeting -->
+      <div class="greeting anim-fade-up">
+        <h1>早上好，陈同学 👋</h1>
+        <p>今天是你在学径学习的第 23 天，继续保持！</p>
+      </div>
+
+      <!-- Continue learning -->
+      <a href="07-galaxy.html" class="continue-banner anim-fade-up anim-delay-1" style="text-decoration:none;color:inherit;">
+        <div class="continue-info">
+          <div class="ci-label">继续学习</div>
+          <div class="ci-title">神经网络基础 — 反向传播算法</div>
+          <div class="ci-detail">人工智能 · 知识星图 · 上次学习到 68%</div>
+          <div class="continue-progress"><div class="continue-progress-fill" style="width:68%"></div></div>
+        </div>
+        <button class="btn" style="background:oklch(100% 0 0 / 0.2);color:white;backdrop-filter:blur(8px);position:relative;z-index:1;">继续 →</button>
+      </a>
+
+      <!-- Quick stats -->
+      <div class="stats-row anim-fade-up anim-delay-2">
+        <div class="stat-card">
+          <span class="stat-label">本周学习</span>
+          <span class="stat-value">12.5h</span>
+          <span class="stat-change">↑ 18% 较上周</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">任务完成率</span>
+          <span class="stat-value">87%</span>
+          <span class="stat-change">↑ 5%</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">知识掌握</span>
+          <span class="stat-value">42 节点</span>
+          <span class="stat-change">↑ 6 本周新增</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">连续学习</span>
+          <span class="stat-value">23 天</span>
+          <span class="stat-change warn">今日待完成</span>
+        </div>
+      </div>
+
+      <!-- Module grid -->
+      <div class="section-header anim-fade-up anim-delay-3">
+        <h2>学习模块</h2>
+        <a href="#">查看全部</a>
+      </div>
+      <div class="module-grid">
+        <a href="05-tutor.html" class="module-card anim-fade-up anim-delay-2">
+          <div class="mod-icon" style="background:var(--ai-light);color:var(--ai);">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          </div>
+          <div class="mod-name">AI Tutor</div>
+          <div class="mod-desc">智能学习助手，知识问答与多轮辅导</div>
+          <div class="mod-meta"><span class="badge badge-ai">AI 驱动</span></div>
+        </a>
+
+        <a href="06-planner.html" class="module-card anim-fade-up anim-delay-3">
+          <div class="mod-icon" style="background:var(--secondary-light);color:var(--secondary);">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          </div>
+          <div class="mod-name">学习计划</div>
+          <div class="mod-desc">AI 生成的个性化学习路线图</div>
+          <div class="mod-meta">3 项任务待完成</div>
+        </a>
+
+        <a href="07-galaxy.html" class="module-card anim-fade-up anim-delay-4">
+          <div class="mod-icon" style="background:var(--primary-light);color:var(--primary);">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+          </div>
+          <div class="mod-name">知识星图</div>
+          <div class="mod-desc">可视化知识图谱与学习地图</div>
+          <div class="mod-meta">42/156 节点已掌握</div>
+        </a>
+
+        <a href="08-practice.html" class="module-card anim-fade-up anim-delay-5">
+          <div class="mod-icon" style="background:var(--warning-light);color:oklch(50% 0.12 80);">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          </div>
+          <div class="mod-name">刷题中心</div>
+          <div class="mod-desc">自适应练习与智能题库</div>
+          <div class="mod-meta">今日 5 题待练</div>
+        </a>
+
+        <a href="09-studio.html" class="module-card anim-fade-up anim-delay-3">
+          <div class="mod-icon" style="background:var(--ai-light);color:var(--ai);">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+          </div>
+          <div class="mod-name">AI 教学工坊</div>
+          <div class="mod-desc">多模态教学资源自动生成</div>
+          <div class="mod-meta"><span class="badge badge-ai">生成中</span></div>
+        </a>
+
+        <a href="10-assessment.html" class="module-card anim-fade-up anim-delay-4">
+          <div class="mod-icon" style="background:var(--success-light);color:var(--success);">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          </div>
+          <div class="mod-name">评测系统</div>
+          <div class="mod-desc">能力评估与认证测验</div>
+          <div class="mod-meta">1 场测验可参加</div>
+        </a>
+
+        <a href="11-library.html" class="module-card anim-fade-up anim-delay-5">
+          <div class="mod-icon" style="background:var(--primary-light);color:var(--primary);">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          </div>
+          <div class="mod-name">学习书架</div>
+          <div class="mod-desc">个人知识库与学习资源</div>
+          <div class="mod-meta">28 份资料</div>
+        </a>
+
+        <a href="12-dashboard.html" class="module-card anim-fade-up anim-delay-6">
+          <div class="mod-icon" style="background:var(--secondary-light);color:var(--secondary);">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          </div>
+          <div class="mod-name">数据看板</div>
+          <div class="mod-desc">学习数据可视化与分析</div>
+          <div class="mod-meta">本周报告已生成</div>
+        </a>
+      </div>
+
+      <!-- Recent activity -->
+      <div class="section-header anim-fade-up">
+        <h2>最近动态</h2>
+      </div>
+      <div class="activity-list anim-fade-up anim-delay-1">
+        <div class="activity-item">
+          <div class="activity-dot" style="background:var(--secondary)"></div>
+          <div class="activity-text">完成知识点「卷积神经网络架构」的学习</div>
+          <div class="activity-time">30 分钟前</div>
+        </div>
+        <div class="activity-item">
+          <div class="activity-dot" style="background:var(--ai)"></div>
+          <div class="activity-text">AI Tutor 解答了关于梯度下降法的疑问</div>
+          <div class="activity-time">1 小时前</div>
+        </div>
+        <div class="activity-item">
+          <div class="activity-dot" style="background:var(--primary)"></div>
+          <div class="activity-text">刷题中心：完成「线性回归」专项练习，正确率 85%</div>
+          <div class="activity-time">2 小时前</div>
+        </div>
+        <div class="activity-item">
+          <div class="activity-dot" style="background:var(--warning)"></div>
+          <div class="activity-text">AI 教学工坊生成了「决策树」思维导图</div>
+          <div class="activity-time">昨天 21:30</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="../js/nav.js"></script>
+</body>
+</html>

@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>学径 — 数据看板</title>
+<link rel="stylesheet" href="../css/tokens.css" />
+<style>
+  body { background: var(--bg); }
+  .page-wrap { min-height: 100vh; }
+  .page-body { padding: var(--sp-8) var(--sp-6); max-width: var(--content-max); margin: 0 auto; }
+
+  .page-header {
+    display: flex; align-items: flex-end; justify-content: space-between;
+    margin-bottom: var(--sp-8);
+  }
+  .page-header h1 { font-family: var(--font-display); font-size: var(--text-2xl); font-weight: 700; }
+  .page-header-sub { font-size: var(--text-sm); color: var(--muted); margin-top: var(--sp-1); }
+
+  /* Top KPI row */
+  .kpi-row {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--sp-4);
+    margin-bottom: var(--sp-8);
+  }
+  .kpi-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--r-lg); padding: var(--sp-5);
+  }
+  .kpi-label { font-size: var(--text-xs); color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+  .kpi-value { font-family: var(--font-display); font-size: var(--text-3xl); font-weight: 700; margin-top: var(--sp-1); font-variant-numeric: tabular-nums; }
+  .kpi-change { font-size: var(--text-xs); margin-top: var(--sp-1); font-weight: 500; }
+  .kpi-up { color: var(--secondary); }
+  .kpi-down { color: var(--danger); }
+
+  /* Two column layout */
+  .dash-grid {
+    display: grid; grid-template-columns: 2fr 1fr; gap: var(--sp-6);
+    margin-bottom: var(--sp-6);
+  }
+
+  .dash-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--r-lg); padding: var(--sp-6);
+  }
+  .dash-card-title {
+    font-weight: 600; font-size: var(--text-md); margin-bottom: var(--sp-5);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .dash-card-title .subtitle { font-size: var(--text-xs); color: var(--muted); font-weight: 400; }
+
+  /* Bar chart (CSS only) */
+  .bar-chart {
+    display: flex; align-items: flex-end; gap: var(--sp-2); height: 160px;
+    padding-bottom: var(--sp-4); border-bottom: 1px solid var(--border);
+  }
+  .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: var(--sp-1); }
+  .bar {
+    width: 100%; border-radius: var(--r-sm) var(--r-sm) 0 0;
+    transition: height 0.6s ease;
+    min-height: 4px;
+  }
+  .bar-label { font-size: 10px; color: var(--muted); }
+  .bar-value { font-size: 10px; color: var(--fg-secondary); font-weight: 500; font-variant-numeric: tabular-nums; }
+
+  /* Heatmap (simplified CSS) */
+  .heatmap {
+    display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px;
+  }
+  .heat-cell {
+    aspect-ratio: 1; border-radius: 3px;
+    position: relative;
+  }
+  .heat-cell::after {
+    content: attr(data-hours);
+    position: absolute; inset: 0;
+    display: grid; place-items: center;
+    font-size: 9px; color: var(--muted);
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .heat-cell:hover::after { opacity: 1; }
+  .heat-0 { background: var(--border); }
+  .heat-1 { background: oklch(90% 0.04 255); }
+  .heat-2 { background: oklch(80% 0.08 255); }
+  .heat-3 { background: oklch(68% 0.12 255); }
+  .heat-4 { background: var(--primary); }
+
+  .heatmap-labels {
+    display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px;
+    margin-top: var(--sp-1);
+  }
+  .heatmap-label { font-size: 10px; color: var(--muted); text-align: center; }
+
+  /* Streak */
+  .streak-display {
+    text-align: center;
+    padding: var(--sp-4) 0;
+  }
+  .streak-num {
+    font-size: 56px;
+    font-weight: 800;
+    color: var(--warning);
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .streak-label { font-size: var(--text-sm); color: var(--muted); margin-top: var(--sp-2); }
+  .streak-calendar {
+    display: flex; gap: 3px; justify-content: center; margin-top: var(--sp-4);
+  }
+  .streak-day {
+    width: 20px; height: 20px;
+    border-radius: 4px;
+    background: var(--border);
+  }
+  .streak-day.done { background: var(--warning); }
+  .streak-day.today { background: var(--warning); box-shadow: 0 0 0 2px var(--warning-light); }
+
+  /* Subject progress */
+  .subject-progress {
+    display: flex; flex-direction: column; gap: var(--sp-4);
+  }
+  .sp-item { }
+  .sp-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--sp-1); }
+  .sp-name { font-size: var(--text-sm); font-weight: 500; }
+  .sp-pct { font-size: var(--text-sm); color: var(--muted); font-variant-numeric: tabular-nums; }
+
+  /* Growth curve (simplified as a stepped visualization) */
+  .growth-chart {
+    height: 120px;
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: var(--sp-2);
+    margin-bottom: var(--sp-3);
+  }
+  .growth-bar {
+    flex: 1;
+    background: var(--primary-light);
+    border-radius: 2px 2px 0 0;
+    transition: height 0.4s ease;
+    position: relative;
+  }
+  .growth-bar.current { background: var(--primary); }
+  .growth-labels { display: flex; justify-content: space-between; }
+  .growth-label { font-size: 10px; color: var(--muted); }
+
+  @media (max-width: 768px) {
+    .kpi-row { grid-template-columns: repeat(2, 1fr); }
+    .dash-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+  <div id="nav-slot" data-active="dashboard"></div>
+  <div class="page-wrap">
+    <div class="page-body">
+      <div class="page-header anim-fade-up">
+        <div>
+          <h1>数据看板</h1>
+          <div class="page-header-sub">学习数据可视化 · 本周报告</div>
+        </div>
+        <div class="flex gap-3">
+          <button class="btn btn-secondary btn-sm">本周</button>
+          <button class="btn btn-ghost btn-sm">本月</button>
+          <button class="btn btn-ghost btn-sm">全部</button>
+        </div>
+      </div>
+
+      <!-- KPIs -->
+      <div class="kpi-row anim-fade-up anim-delay-1">
+        <div class="kpi-card">
+          <div class="kpi-label">本周学习时长</div>
+          <div class="kpi-value">12.5<span style="font-size:var(--text-lg);color:var(--muted)">h</span></div>
+          <div class="kpi-change kpi-up">↑ 18% 较上周</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">任务完成率</div>
+          <div class="kpi-value">87<span style="font-size:var(--text-lg);color:var(--muted)">%</span></div>
+          <div class="kpi-change kpi-up">↑ 5%</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">知识节点</div>
+          <div class="kpi-value">42</div>
+          <div class="kpi-change kpi-up">↑ 6 本周新增</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">刷题正确率</div>
+          <div class="kpi-value">82<span style="font-size:var(--text-lg);color:var(--muted)">%</span></div>
+          <div class="kpi-change kpi-down">↓ 2%</div>
+        </div>
+      </div>
+
+      <!-- Main grid -->
+      <div class="dash-grid">
+        <!-- Weekly study hours -->
+        <div class="dash-card anim-fade-up anim-delay-2">
+          <div class="dash-card-title">
+            每日学习时长
+            <span class="subtitle">本周总计 12.5 小时</span>
+          </div>
+          <div class="bar-chart">
+            <div class="bar-col">
+              <div class="bar-value">2.1h</div>
+              <div class="bar" style="height:70%;background:var(--primary)"></div>
+              <div class="bar-label">周一</div>
+            </div>
+            <div class="bar-col">
+              <div class="bar-value">1.8h</div>
+              <div class="bar" style="height:60%;background:var(--primary)"></div>
+              <div class="bar-label">周二</div>
+            </div>
+            <div class="bar-col">
+              <div class="bar-value">2.5h</div>
+              <div class="bar" style="height:83%;background:var(--primary)"></div>
+              <div class="bar-label">周三</div>
+            </div>
+            <div class="bar-col">
+              <div class="bar-value">1.2h</div>
+              <div class="bar" style="height:40%;background:var(--primary)"></div>
+              <div class="bar-label">周四</div>
+            </div>
+            <div class="bar-col">
+              <div class="bar-value">2.8h</div>
+              <div class="bar" style="height:93%;background:var(--primary)"></div>
+              <div class="bar-label">周五</div>
+            </div>
+            <div class="bar-col">
+              <div class="bar-value">1.5h</div>
+              <div class="bar" style="height:50%;background:var(--primary-light)"></div>
+              <div class="bar-label">周六</div>
+            </div>
+            <div class="bar-col">
+              <div class="bar-value">0.6h</div>
+              <div class="bar" style="height:20%;background:var(--border)"></div>
+              <div class="bar-label">周日</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Streak -->
+        <div class="dash-card anim-fade-up anim-delay-3">
+          <div class="dash-card-title">连续学习</div>
+          <div class="streak-display">
+            <div class="streak-num">23</div>
+            <div class="streak-label">天连续学习</div>
+            <div class="streak-calendar">
+              <div class="streak-day done"></div>
+              <div class="streak-day done"></div>
+              <div class="streak-day done"></div>
+              <div class="streak-day done"></div>
+              <div class="streak-day done"></div>
+              <div class="streak-day done"></div>
+              <div class="streak-day today"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Second row -->
+      <div class="dash-grid">
+        <!-- Heatmap -->
+        <div class="dash-card anim-fade-up anim-delay-3">
+          <div class="dash-card-title">
+            学习热力图
+            <span class="subtitle">近 4 周</span>
+          </div>
+          <div class="heatmap">
+            <!-- Week 1 -->
+            <div class="heat-cell heat-3" data-hours="2.5h"></div>
+            <div class="heat-cell heat-2" data-hours="1.8h"></div>
+            <div class="heat-cell heat-4" data-hours="3.2h"></div>
+            <div class="heat-cell heat-1" data-hours="0.5h"></div>
+            <div class="heat-cell heat-3" data-hours="2.1h"></div>
+            <div class="heat-cell heat-2" data-hours="1.2h"></div>
+            <div class="heat-cell heat-0"></div>
+            <!-- Week 2 -->
+            <div class="heat-cell heat-2" data-hours="1.5h"></div>
+            <div class="heat-cell heat-3" data-hours="2.8h"></div>
+            <div class="heat-cell heat-2" data-hours="1.4h"></div>
+            <div class="heat-cell heat-4" data-hours="3.5h"></div>
+            <div class="heat-cell heat-1" data-hours="0.8h"></div>
+            <div class="heat-cell heat-0"></div>
+            <div class="heat-cell heat-0"></div>
+            <!-- Week 3 -->
+            <div class="heat-cell heat-3" data-hours="2.2h"></div>
+            <div class="heat-cell heat-2" data-hours="1.6h"></div>
+            <div class="heat-cell heat-3" data-hours="2.5h"></div>
+            <div class="heat-cell heat-2" data-hours="1.9h"></div>
+            <div class="heat-cell heat-4" data-hours="3.0h"></div>
+            <div class="heat-cell heat-1" data-hours="1.0h"></div>
+            <div class="heat-cell heat-0"></div>
+            <!-- Week 4 (current) -->
+            <div class="heat-cell heat-3" data-hours="2.1h"></div>
+            <div class="heat-cell heat-2" data-hours="1.8h"></div>
+            <div class="heat-cell heat-3" data-hours="2.5h"></div>
+            <div class="heat-cell heat-2" data-hours="1.2h"></div>
+            <div class="heat-cell heat-0"></div>
+            <div class="heat-cell heat-0"></div>
+            <div class="heat-cell heat-0"></div>
+          </div>
+          <div class="heatmap-labels">
+            <div class="heatmap-label">一</div>
+            <div class="heatmap-label">二</div>
+            <div class="heatmap-label">三</div>
+            <div class="heatmap-label">四</div>
+            <div class="heatmap-label">五</div>
+            <div class="heatmap-label">六</div>
+            <div class="heatmap-label">日</div>
+          </div>
+        </div>
+
+        <!-- Subject progress -->
+        <div class="dash-card anim-fade-up anim-delay-4">
+          <div class="dash-card-title">学科进度</div>
+          <div class="subject-progress">
+            <div class="sp-item">
+              <div class="sp-header">
+                <span class="sp-name">人工智能</span>
+                <span class="sp-pct">27%</span>
+              </div>
+              <div class="progress"><div class="progress-fill" style="width:27%"></div></div>
+            </div>
+            <div class="sp-item">
+              <div class="sp-header">
+                <span class="sp-name">数据结构与算法</span>
+                <span class="sp-pct">45%</span>
+              </div>
+              <div class="progress"><div class="progress-fill progress-fill-success" style="width:45%"></div></div>
+            </div>
+            <div class="sp-item">
+              <div class="sp-header">
+                <span class="sp-name">Web 开发</span>
+                <span class="sp-pct">12%</span>
+              </div>
+              <div class="progress"><div class="progress-fill" style="width:12%;background:var(--ai)"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Growth curve -->
+      <div class="dash-card anim-fade-up anim-delay-4">
+        <div class="dash-card-title">
+          能力成长曲线
+          <span class="subtitle">近 8 周综合能力评分</span>
+        </div>
+        <div class="growth-chart">
+          <div class="growth-bar" style="height:30%"></div>
+          <div class="growth-bar" style="height:38%"></div>
+          <div class="growth-bar" style="height:42%"></div>
+          <div class="growth-bar" style="height:48%"></div>
+          <div class="growth-bar" style="height:55%"></div>
+          <div class="growth-bar" style="height:62%"></div>
+          <div class="growth-bar" style="height:68%"></div>
+          <div class="growth-bar current" style="height:74%"></div>
+        </div>
+        <div class="growth-labels">
+          <div class="growth-label">第1周</div>
+          <div class="growth-label">第2周</div>
+          <div class="growth-label">第3周</div>
+          <div class="growth-label">第4周</div>
+          <div class="growth-label">第5周</div>
+          <div class="growth-label">第6周</div>
+          <div class="growth-label">第7周</div>
+          <div class="growth-label" style="font-weight:600;color:var(--primary)">本周</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="../js/nav.js"></script>
+</body>
+</html>

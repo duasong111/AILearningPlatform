@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>学径 — 学习计划</title>
+<link rel="stylesheet" href="../css/tokens.css" />
+<style>
+  body { background: var(--bg); }
+  .page-wrap { min-height: 100vh; }
+  .page-body { padding: var(--sp-8) var(--sp-6); max-width: var(--content-max); margin: 0 auto; }
+
+  .page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--sp-8);
+  }
+  .page-header h1 { font-family: var(--font-display); font-size: var(--text-2xl); font-weight: 700; }
+  .page-header-sub { font-size: var(--text-sm); color: var(--muted); margin-top: var(--sp-1); }
+
+  /* Week overview */
+  .week-overview {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: var(--sp-2);
+    margin-bottom: var(--sp-8);
+  }
+  .day-col {
+    text-align: center;
+    padding: var(--sp-3) var(--sp-2);
+    border-radius: var(--r-md);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .day-col:hover { border-color: var(--primary); }
+  .day-col.today { border-color: var(--primary); background: var(--primary-light); }
+  .day-col.done { border-color: var(--secondary); }
+  .day-label { font-size: var(--text-xs); color: var(--muted); margin-bottom: var(--sp-1); }
+  .day-num { font-weight: 600; font-size: var(--text-md); color: var(--fg); }
+  .day-col.today .day-num { color: var(--primary); }
+  .day-dots { display: flex; gap: 3px; justify-content: center; margin-top: var(--sp-2); }
+  .day-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border); }
+  .day-dot.filled { background: var(--primary); }
+  .day-dot.partial { background: var(--warning); }
+
+  /* Task timeline */
+  .timeline {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-3);
+    margin-bottom: var(--sp-8);
+  }
+  .timeline-date {
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--fg-secondary);
+    padding: var(--sp-2) 0;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: var(--sp-2);
+  }
+  .task-card {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--sp-4);
+    padding: var(--sp-4) var(--sp-5);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    transition: all 0.2s;
+  }
+  .task-card:hover { box-shadow: var(--shadow-sm); border-color: var(--border-strong); }
+
+  .task-check {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    border: 2px solid var(--border-strong);
+    flex-shrink: 0;
+    margin-top: 2px;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: grid;
+    place-items: center;
+  }
+  .task-check:hover { border-color: var(--primary); }
+  .task-check.completed {
+    background: var(--secondary);
+    border-color: var(--secondary);
+  }
+  .task-check.completed svg { opacity: 1; }
+  .task-check svg { opacity: 0; }
+
+  .task-body { flex: 1; }
+  .task-title { font-weight: 500; font-size: var(--text-base); color: var(--fg); margin-bottom: var(--sp-1); }
+  .task-card.completed .task-title { text-decoration: line-through; color: var(--muted); }
+  .task-meta {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3);
+    font-size: var(--text-xs);
+    color: var(--muted);
+  }
+  .task-meta .tag {
+    padding: 1px 8px;
+    border-radius: var(--r-full);
+    font-size: 11px;
+    font-weight: 500;
+  }
+  .tag-learn { background: var(--primary-light); color: var(--primary); }
+  .tag-practice { background: var(--warning-light); color: oklch(45% 0.12 80); }
+  .tag-assess { background: var(--success-light); color: var(--success); }
+
+  .task-time {
+    font-size: var(--text-xs);
+    color: var(--muted);
+    white-space: nowrap;
+    margin-left: auto;
+  }
+
+  /* Phase progress */
+  .phase-bar {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-4);
+    padding: var(--sp-5);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    margin-bottom: var(--sp-8);
+  }
+  .phase-info { flex: 1; }
+  .phase-title { font-weight: 600; font-size: var(--text-md); margin-bottom: var(--sp-1); }
+  .phase-desc { font-size: var(--text-sm); color: var(--muted); margin-bottom: var(--sp-3); }
+  .phase-progress { display: flex; gap: 3px; }
+  .phase-segment {
+    flex: 1;
+    height: 6px;
+    border-radius: var(--r-full);
+    background: var(--border);
+  }
+  .phase-segment.done { background: var(--secondary); }
+  .phase-segment.current { background: var(--primary); }
+  .phase-label { font-size: var(--text-xs); color: var(--muted); text-align: right; min-width: 60px; }
+
+  @media (max-width: 768px) {
+    .week-overview { grid-template-columns: repeat(4, 1fr); }
+    .phase-bar { flex-direction: column; align-items: stretch; }
+  }
+</style>
+</head>
+<body>
+  <div id="nav-slot" data-active="planner"></div>
+  <div class="page-wrap">
+    <div class="page-body">
+      <div class="page-header anim-fade-up">
+        <div>
+          <h1>学习计划</h1>
+          <div class="page-header-sub">人工智能 · 第 4 周 / 共 12 周</div>
+        </div>
+        <div class="flex gap-3">
+          <button class="btn btn-secondary btn-sm">本周视图</button>
+          <button class="btn btn-primary btn-sm">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            请求 AI 调整
+          </button>
+        </div>
+      </div>
+
+      <!-- Phase progress -->
+      <div class="phase-bar anim-fade-up anim-delay-1">
+        <div class="phase-info">
+          <div class="phase-title">阶段二：机器学习基础</div>
+          <div class="phase-desc">掌握监督学习、无监督学习和模型评估的核心方法</div>
+          <div class="phase-progress">
+            <div class="phase-segment done"></div>
+            <div class="phase-segment done"></div>
+            <div class="phase-segment done"></div>
+            <div class="phase-segment current"></div>
+            <div class="phase-segment"></div>
+            <div class="phase-segment"></div>
+          </div>
+        </div>
+        <div class="phase-label">4/6 完成</div>
+      </div>
+
+      <!-- Week overview -->
+      <div class="week-overview anim-fade-up anim-delay-2">
+        <div class="day-col done">
+          <div class="day-label">周一</div>
+          <div class="day-num">9</div>
+          <div class="day-dots"><div class="day-dot filled"></div><div class="day-dot filled"></div></div>
+        </div>
+        <div class="day-col done">
+          <div class="day-label">周二</div>
+          <div class="day-num">10</div>
+          <div class="day-dots"><div class="day-dot filled"></div><div class="day-dot filled"></div><div class="day-dot filled"></div></div>
+        </div>
+        <div class="day-col today">
+          <div class="day-label">周三</div>
+          <div class="day-num">11</div>
+          <div class="day-dots"><div class="day-dot filled"></div><div class="day-dot partial"></div><div class="day-dot"></div></div>
+        </div>
+        <div class="day-col">
+          <div class="day-label">周四</div>
+          <div class="day-num">12</div>
+          <div class="day-dots"><div class="day-dot"></div><div class="day-dot"></div></div>
+        </div>
+        <div class="day-col">
+          <div class="day-label">周五</div>
+          <div class="day-num">13</div>
+          <div class="day-dots"><div class="day-dot"></div><div class="day-dot"></div></div>
+        </div>
+        <div class="day-col">
+          <div class="day-label">周六</div>
+          <div class="day-num">14</div>
+          <div class="day-dots"><div class="day-dot"></div></div>
+        </div>
+        <div class="day-col">
+          <div class="day-label">周日</div>
+          <div class="day-num">15</div>
+          <div class="day-dots"><div class="day-dot"></div></div>
+        </div>
+      </div>
+
+      <!-- Today's tasks -->
+      <div class="timeline anim-fade-up anim-delay-3">
+        <div class="timeline-date">今天 · 6 月 11 日（周三）</div>
+
+        <div class="task-card completed">
+          <div class="task-check completed">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <div class="task-body">
+            <div class="task-title">阅读：逻辑回归的损失函数推导</div>
+            <div class="task-meta">
+              <span class="tag tag-learn">学习</span>
+              <span>30 分钟</span>
+            </div>
+          </div>
+          <div class="task-time">已完成</div>
+        </div>
+
+        <div class="task-card">
+          <div class="task-check" onclick="this.classList.toggle('completed')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <div class="task-body">
+            <div class="task-title">实践：用 Scikit-learn 实现逻辑回归分类器</div>
+            <div class="task-meta">
+              <span class="tag tag-practice">实践</span>
+              <span>45 分钟</span>
+              <span>AI Course Studio 已生成实验指导</span>
+            </div>
+          </div>
+          <div class="task-time">进行中</div>
+        </div>
+
+        <div class="task-card">
+          <div class="task-check" onclick="this.classList.toggle('completed')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <div class="task-body">
+            <div class="task-title">刷题：逻辑回归相关习题（10 道）</div>
+            <div class="task-meta">
+              <span class="tag tag-practice">练习</span>
+              <span>25 分钟</span>
+            </div>
+          </div>
+          <div class="task-time">待开始</div>
+        </div>
+      </div>
+
+      <!-- Tomorrow -->
+      <div class="timeline anim-fade-up anim-delay-4">
+        <div class="timeline-date">明天 · 6 月 12 日（周四）</div>
+
+        <div class="task-card">
+          <div class="task-check" onclick="this.classList.toggle('completed')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <div class="task-body">
+            <div class="task-title">视频学习：决策树与随机森林（AI 生成讲解视频）</div>
+            <div class="task-meta">
+              <span class="tag tag-learn">学习</span>
+              <span>40 分钟</span>
+            </div>
+          </div>
+          <div class="task-time">待开始</div>
+        </div>
+
+        <div class="task-card">
+          <div class="task-check" onclick="this.classList.toggle('completed')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <div class="task-body">
+            <div class="task-title">章节测验：监督学习方法综合评测</div>
+            <div class="task-meta">
+              <span class="tag tag-assess">评测</span>
+              <span>30 分钟</span>
+            </div>
+          </div>
+          <div class="task-time">待开始</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="../js/nav.js"></script>
+</body>
+</html>

@@ -1,0 +1,643 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+@plugin 'tailwindcss-animate';
+
+@import './base.css';
+@import 'tailwindcss';
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+#app {
+  width: 100%;
+  min-height: 100vh;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* ============================================================
+   用户设置钩子 (由 useSettingsStore 同步到 <html data-fs> 等)
+   ============================================================ */
+/* ============================================================
+   用户设置钩子 (由 useSettingsStore 同步到 <html data-fs> 等)
+   ============================================================ */
+
+/* 字号缩放系数 —— 由 base.css 的 body 规则 (calc(16px * var(--x-font-scale)))
+   消费, 0.92 / 1 / 1.10 分别对应 sm (14.7px) / md (16px) / lg (17.6px) */
+html[data-fs='sm'] {
+  --x-font-scale: 0.92;
+}
+html[data-fs='md'] {
+  --x-font-scale: 1;
+}
+html[data-fs='lg'] {
+  --x-font-scale: 1.10;
+}
+
+/* Auto 主题: 跟随系统. 由 SettingsView 持久化 'auto' 字面值 + 这里匹配 prefers-color-scheme */
+@media (prefers-color-scheme: dark) {
+  html[data-theme='auto'] {
+    color-scheme: dark;
+  }
+  /* 当主题是 auto + 系统是深色时, 注入深色 token */
+  html[data-theme='auto'] {
+    --x-canvas: #0F172A;
+    --x-canvas-soft: #1E293B;
+    --x-canvas-card: #1E293B;
+    --x-canvas-mid: #334155;
+    --x-canvas-tint: #1E3A8A;
+    --x-hairline: #334155;
+    --x-hairline-strong: #475569;
+    --x-ink: #F8FAFC;
+    --x-ink-hover: #E2E8F0;
+    --x-body: #CBD5E1;
+    --x-body-mid: #94A3B8;
+    --x-mute: #64748B;
+    --x-ink-alpha-06: rgba(248, 250, 252, 0.06);
+    --x-ink-alpha-15: rgba(248, 250, 252, 0.15);
+    --x-ink-alpha-30: rgba(248, 250, 252, 0.30);
+    --x-ink-alpha-45: rgba(248, 250, 252, 0.45);
+  }
+  /* Auto + 系统深色: 导航栏同样变深底 */
+  html[data-theme='auto'] .x-nav {
+    background: oklch(15% 0.02 240 / 0.88);
+    box-shadow:
+      0 1px 0 rgba(0, 0, 0, 0.50),
+      0 6px 24px rgba(0, 0, 0, 0.55);
+  }
+  html[data-theme='auto'] .x-nav-link:hover {
+    background: var(--x-canvas-mid);
+  }
+}
+
+/* Dark mode —— 覆盖 base.css 的 --x-* 浅色调色板, 全站主题切换.
+     阴影 / 强调色 / 语义色 保持不变, 只翻 base / ink / body / canvas / hairline. */
+html[data-theme='dark'] {
+  /* Surface —— 全部翻成深色背景 */
+  --x-canvas: #0F172A;            /* slate-900 主背景 */
+  --x-canvas-soft: #1E293B;       /* slate-800 面板 */
+  --x-canvas-card: #1E293B;       /* 卡片底色 */
+  --x-canvas-mid: #334155;        /* slate-700 嵌套 */
+  --x-canvas-tint: #1E3A8A;       /* 蓝调深色品牌底 */
+
+  /* Border —— 深色 hairline 仍要可见但比浅色更弱 */
+  --x-hairline: #334155;          /* slate-700 */
+  --x-hairline-strong: #475569;   /* slate-600 */
+
+  /* Text —— 全部翻成浅色 */
+  --x-ink: #F8FAFC;               /* slate-50 主文字 */
+  --x-ink-hover: #E2E8F0;         /* slate-200 */
+  --x-body: #CBD5E1;              /* slate-300 副文字 */
+  --x-body-mid: #94A3B8;          /* slate-400 弱化 */
+  --x-mute: #64748B;              /* slate-500 占位 */
+
+  /* Primary soft —— 暗色下用更深的 tint */
+  --x-primary-soft: oklch(25% 0.04 245);
+
+  /* Translucent ink —— 反相 */
+  --x-ink-alpha-06: rgba(248, 250, 252, 0.06);
+  --x-ink-alpha-15: rgba(248, 250, 252, 0.15);
+  --x-ink-alpha-30: rgba(248, 250, 252, 0.30);
+  --x-ink-alpha-45: rgba(248, 250, 252, 0.45);
+
+  /* Blue alpha —— 暗色下更亮以便可见 */
+  --x-blue-alpha-06: rgba(96, 165, 250, 0.12);
+  --x-blue-alpha-18: rgba(96, 165, 250, 0.30);
+  --x-blue-alpha-30: rgba(96, 165, 250, 0.45);
+}
+
+/* 暗色下卡片阴影要更明显才能与背景分离 */
+html[data-theme='dark'] {
+  --x-shadow-card:
+    0 2px 4px rgba(0, 0, 0, 0.30),
+    0 8px 24px rgba(0, 0, 0, 0.40);
+  --x-shadow-card-hover:
+    0 4px 8px rgba(0, 0, 0, 0.40),
+    0 16px 40px rgba(0, 0, 0, 0.55);
+}
+
+/* 顶部导航栏 —— 默认实现里 .x-nav 用的是硬编码 oklch(100% 0 0 / 0.90) 半透明白,
+   不跟 token 走. 在 dark 主题下覆盖成黑底 (与页面同色), 字色靠 var(--x-ink) 自然翻成白.
+   浅主题用 oklch 灰色阴影 (半透明白底); 深主题换成更黑的阴影才看得见. */
+html[data-theme='dark'] .x-nav {
+  background: oklch(15% 0.02 240 / 0.88);
+  box-shadow:
+    0 1px 0 rgba(0, 0, 0, 0.50),
+    0 6px 24px rgba(0, 0, 0, 0.55);
+}
+html[data-theme='dark'] .x-nav-link:hover {
+  background: var(--x-canvas-mid);
+}
+
+/* 首页 hero 下的三个特色 pill —— 默认是 rgba(255,255,255,0.72) 半透明白,
+   暗主题下换成半透明深色, 文字靠 var(--x-body) 已自动反相 */
+html[data-theme='dark'] .x-pill {
+  background: oklch(20% 0.02 240 / 0.72);
+  color: var(--x-body);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.30),
+    0 4px 14px rgba(0, 0, 0, 0.40);
+}
+html[data-theme='auto'] .x-pill {
+  background: rgba(255, 255, 255, 0.72);     /* 默认还是亮, 让 prefers-color-scheme: dark 覆盖 */
+}
+@media (prefers-color-scheme: dark) {
+  html[data-theme='auto'] .x-pill {
+    background: oklch(20% 0.02 240 / 0.72);
+    color: var(--x-body);
+    box-shadow:
+      0 1px 2px rgba(0, 0, 0, 0.30),
+      0 4px 14px rgba(0, 0, 0, 0.40);
+  }
+}
+
+/* 书架页 .cover-badge 默认态 (未读书用的徽标) —— 默认实现硬编码
+   rgba(255,255,255,0.95) 半透明白, dark 下太亮且阴影消失.
+   状态徽标 (done/paused/reading) 用 token 配色不受影响, 这里只覆写默认态. */
+html[data-theme='dark'] .cover-badge {
+  background: oklch(25% 0.02 240 / 0.85);
+  color: var(--x-ink);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.40);
+}
+html[data-theme='auto'] .cover-badge {
+  background: rgba(255, 255, 255, 0.95);     /* 默认亮, 让媒体查询覆盖 */
+}
+@media (prefers-color-scheme: dark) {
+  html[data-theme='auto'] .cover-badge {
+    background: oklch(25% 0.02 240 / 0.85);
+    color: var(--x-ink);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.40);
+  }
+}
+
+/* Toast 在暗色下要保持白底以保证可读 */
+html[data-theme='dark'] .x-toast {
+  background: #ffffff !important;
+  color: #0F172A !important;
+  border-color: #E5E7EB !important;
+}
+html[data-theme='dark'] .x-toast .el-message__content {
+  color: #0F172A !important;
+}
+
+/* Element Plus 弹窗 (MessageBox / Dialog) 在暗色下的兜底, 避免白底闪瞎 */
+html[data-theme='dark'] .el-message-box,
+html[data-theme='dark'] .el-overlay {
+  background: rgba(15, 23, 42, 0.7) !important;
+}
+html[data-theme='dark'] .el-message-box {
+  background: #1E293B !important;
+  border: 1px solid #334155 !important;
+  color: #F8FAFC !important;
+}
+
+/* ============================================================
+   /course-select 选课页 dark 主题覆盖
+   该页面大量用 oklch 硬编码色 (浅色底 + 深色字), 主题切换时
+   必须把"白底黑字"反相成"黑底白字", 几个品牌色 (蓝/绿) 保持不变.
+   ============================================================ */
+html[data-theme='dark'] .x-cs {
+  color: oklch(95% 0.005 240);                  /* #1f2937 → #f1f5f9 */
+  background-color: oklch(15% 0.02 240);         /* 主背景深色 */
+  background-image:
+    radial-gradient(circle at 1px 1px, oklch(25% 0.015 240) 1px, transparent 0);  /* 点阵变深灰 */
+}
+
+/* 顶部 masthead */
+html[data-theme='dark'] .x-masthead {
+  border-bottom-color: oklch(25% 0.015 240);
+  background: oklch(15% 0.02 240 / 0.85);
+}
+html[data-theme='dark'] .x-brand-name,
+html[data-theme='dark'] .x-item strong {
+  color: oklch(95% 0.005 240);
+}
+html[data-theme='dark'] .x-brand-mark { border-color: oklch(95% 0.005 240); }
+html[data-theme='dark'] .x-live-dot::before { background: oklch(70% 0.18 145); }
+
+/* 卡片 + 详情区 */
+html[data-theme='dark'] .x-card {
+  background: oklch(20% 0.02 240);              /* 卡片底色深一档, 跟主背景区分 */
+  border-color: oklch(28% 0.02 240);
+  box-shadow: 0 30px 60px -28px rgba(0, 0, 0, 0.6),
+              0 12px 28px -16px rgba(0, 0, 0, 0.4);
+}
+html[data-theme='dark'] .x-card-cover { border-bottom-color: oklch(28% 0.02 240); }
+html[data-theme='dark'] .x-card.is-active {
+  box-shadow: 0 1px 0 0 oklch(60% 0.20 245) inset,
+              0 30px 60px -28px rgba(0, 0, 0, 0.7),
+              0 12px 28px -16px rgba(0, 0, 0, 0.5);
+  border-color: oklch(70% 0.22 245);            /* 蓝色加亮, 暗背景下更明显 */
+}
+html[data-theme='dark'] .x-card.is-owned { background: oklch(22% 0.04 145); }   /* 已选绿色 tint */
+
+/* 详情区 */
+html[data-theme='dark'] .x-detail { color: oklch(92% 0.005 240); }
+html[data-theme='dark'] .x-detail-body { color: oklch(78% 0.01 240); }
+html[data-theme='dark'] .x-detail-title { color: oklch(95% 0.005 240); }
+
+/* 滑道两侧的渐变蒙层 (避免亮色蒙层跟深色背景冲突) */
+html[data-theme='dark'] .x-carousel::before {
+  background: linear-gradient(to right, oklch(15% 0.02 240) 25%, transparent);
+}
+html[data-theme='dark'] .x-carousel::after {
+  background: linear-gradient(to left, oklch(15% 0.02 240) 25%, transparent);
+}
+
+/* 底部 HUD */
+html[data-theme='dark'] .x-hud {
+  border-top-color: oklch(25% 0.015 240);
+  background: oklch(15% 0.02 240 / 0.85);
+  color: oklch(78% 0.01 240);
+}
+html[data-theme='dark'] .x-hud-num,
+html[data-theme='dark'] .x-hud-hint kbd { color: oklch(95% 0.005 240); }
+html[data-theme='dark'] .x-hud-progress { background: oklch(28% 0.02 240); }
+
+/* 跳过入口按钮 (CourseSelectView 里加的 x-btn-skip) */
+html[data-theme='dark'] .x-btn-skip { color: oklch(70% 0.014 240); }
+html[data-theme='dark'] .x-btn-skip:hover { color: oklch(85% 0.02 240); }
+html[data-theme='dark'] .x-btn-skip-hint { color: oklch(60% 0.014 240); }
+html[data-theme='dark'] .x-btn-skip-label { text-decoration-color: oklch(40% 0.01 240); }
+
+/* 按钮 (success / primary / ghost) 在暗色下的边线 / 文字微调 */
+html[data-theme='dark'] .x-btn-ghost {
+  background: oklch(20% 0.02 240);
+  border-color: oklch(28% 0.02 240);
+  color: oklch(85% 0.01 240);                     /* 文字色提到亮档, 暗底能看清 */
+}
+html[data-theme='dark'] .x-btn-ghost:hover {
+  background: oklch(28% 0.02 240);
+  color: oklch(95% 0.005 240);
+}
+
+/* 卡片内部元素 — 之前只覆写了卡片外壳, 里面白底白字看不清 */
+html[data-theme='dark'] .x-card-corner { border-color: oklch(60% 0.22 245); }
+html[data-theme='dark'] .x-card-num { color: oklch(95% 0.005 240); }
+html[data-theme='dark'] .x-card-meta-cover { color: oklch(92% 0.005 240); }
+html[data-theme='dark'] .x-card-title { color: oklch(95% 0.005 240); }
+html[data-theme='dark'] .x-card-sub { color: oklch(78% 0.01 240); }
+html[data-theme='dark'] .x-card-foot { color: oklch(70% 0.012 240); }
+html[data-theme='dark'] .x-card-owned-badge {
+  background: oklch(60% 0.18 145);
+  color: #fff;
+}
+
+/* 底部详情条带 —— 之前没覆写背景, 仍是白底 */
+html[data-theme='dark'] .x-detail {
+  background: oklch(18% 0.02 240);
+  border-top-color: oklch(28% 0.02 240);
+  color: oklch(92% 0.005 240);
+}
+html[data-theme='dark'] .x-detail-title { color: oklch(95% 0.005 240); }
+html[data-theme='dark'] .x-detail-body { color: oklch(78% 0.01 240); }
+html[data-theme='dark'] .x-kicker { color: oklch(70% 0.01 240); }
+
+/* 底部 HUD (52px 高, 进度条 + 提示) */
+html[data-theme='dark'] .x-hud {
+  border-top-color: oklch(28% 0.02 240);
+  background: oklch(18% 0.02 240 / 0.85);
+  color: oklch(78% 0.01 240);
+}
+html[data-theme='dark'] .x-hud-counter .x-num { color: oklch(95% 0.005 240); }
+html[data-theme='dark'] .x-hud-counter .x-total { color: oklch(70% 0.012 240); }
+html[data-theme='dark'] .x-hud-hint { color: oklch(78% 0.01 240); }
+html[data-theme='dark'] .x-hud-progress { background: oklch(28% 0.02 240); }
+html[data-theme='dark'] .x-hud-progress-bar { background: oklch(60% 0.22 245); }
+
+/* HUD 里的 kbd 按键徽标 —— 之前是白底黑字, 暗下完全看不清 */
+html[data-theme='dark'] .x-hud-hint kbd {
+  background: oklch(28% 0.02 240);
+  border-color: oklch(35% 0.018 240);
+  color: oklch(92% 0.005 240);
+}
+html[data-theme='dark'] .x-hud-hint kbd:hover { background: oklch(35% 0.018 240); }
+
+/* 禁用按钮 (回到课程列表按钮禁用态) */
+html[data-theme='dark'] .x-btn-disabled {
+  background: oklch(25% 0.02 240);
+  color: oklch(60% 0.012 240);
+}
+
+/* ============================================================
+   视频课播放器 VideoPlayerView dark 主题覆盖
+   三栏悬浮卡片 + 右侧智能体协作空间
+   ============================================================ */
+
+/* 三栏通用卡片底色 */
+html[data-theme='dark'] .vp-shell {
+  background: var(--x-canvas);
+}
+
+/* 视频播放器容器 */
+html[data-theme='dark'] .vp-video-wrap {
+  background: #000;
+}
+
+/* 思维导图节点在暗色下反相 */
+html[data-theme='dark'] .vp-mindmap-svg text {
+  fill: var(--x-ink);
+}
+html[data-theme='dark'] .vp-mindmap-svg text[fill="#6e6e73"] {
+  fill: var(--x-body-mid);
+}
+html[data-theme='dark'] .vp-mindmap-svg text[fill="#1d1d1f"] {
+  fill: var(--x-ink);
+}
+html[data-theme='dark'] .vp-mindmap-svg rect[fill="#f5f5f7"] {
+  fill: oklch(22% 0.02 240);
+}
+html[data-theme='dark'] .vp-mindmap-svg rect[stroke="#d2d2d7"] {
+  stroke: var(--x-hairline);
+}
+html[data-theme='dark'] .vp-mindmap-svg path[stroke="#d2d2d7"] {
+  stroke: var(--x-hairline);
+}
+html[data-theme='dark'] .vp-mindmap-svg rect[fill="#e8f8ee"] {
+  fill: oklch(22% 0.04 145);
+}
+html[data-theme='dark'] .vp-mindmap-svg rect[stroke="#34c759"] {
+  stroke: oklch(60% 0.18 145);
+}
+html[data-theme='dark'] .vp-mindmap-svg path[stroke="#34c759"] {
+  stroke: oklch(60% 0.18 145);
+}
+
+/* 代码块区 (课程详情里 code 展示) */
+html[data-theme='dark'] .x-code-block {
+  background: oklch(15% 0.02 240);
+  border-color: oklch(28% 0.02 240);
+  color: oklch(85% 0.01 240);
+}
+
+/* ============================================================
+   /course-onboarding/:code 课程画像构建页 dark 主题覆盖
+   两栏布局: 左 = 课程信息卡 + 返回 + 详情; 右 = 引导步骤 + 聊天.
+   ============================================================ */
+
+/* 根容器 + 主背景 */
+html[data-theme='dark'] .x-co {
+  background-color: oklch(15% 0.02 240);
+  color: oklch(92% 0.005 240);
+}
+
+/* 左栏背景 */
+html[data-theme='dark'] .x-co-left {
+  background: oklch(18% 0.02 240);
+  border-right-color: oklch(28% 0.02 240);
+}
+
+/* 左栏返回按钮 + 标题 + 文字 */
+html[data-theme='dark'] .x-back-btn {
+  color: oklch(78% 0.01 240);
+}
+html[data-theme='dark'] .x-back-btn:hover { color: oklch(95% 0.005 240); }
+
+html[data-theme='dark'] .x-co-title { color: oklch(95% 0.005 240); }
+html[data-theme='dark'] .x-co-desc,
+html[data-theme='dark'] .x-co-full-desc { color: oklch(78% 0.01 240); }
+
+html[data-theme='dark'] .x-co-divider {
+  background: oklch(28% 0.02 240);
+}
+
+/* 左栏底部装饰线 */
+html[data-theme='dark'] .x-co-card::after {
+  background: linear-gradient(to bottom, transparent 40%, rgba(0, 0, 0, 0.7));
+}
+
+/* 右栏构建引导面板 (x-build-*) */
+html[data-theme='dark'] .x-build-overlay {
+  background: oklch(20% 0.02 240 / 0.92);
+  color: oklch(92% 0.005 240);
+}
+html[data-theme='dark'] .x-build-step {
+  background: oklch(18% 0.02 240);
+  border: 2px solid oklch(28% 0.02 240);
+}
+html[data-theme='dark'] .x-build-step.is-active {
+  background: oklch(25% 0.04 245);
+  border-color: oklch(60% 0.22 245);
+}
+html[data-theme='dark'] .x-build-step.is-done {
+  background: oklch(22% 0.04 145);
+  border-color: oklch(60% 0.18 145);
+}
+html[data-theme='dark'] .x-build-step-indicator {
+  background: oklch(28% 0.02 240);
+  color: oklch(78% 0.01 240);
+}
+html[data-theme='dark'] .x-build-step.is-active .x-build-step-indicator {
+  background: oklch(60% 0.22 245);
+  color: #fff;
+}
+html[data-theme='dark'] .x-build-step.is-done .x-build-step-indicator {
+  background: oklch(60% 0.18 145);
+  color: #fff;
+}
+html[data-theme='dark'] .x-build-step-label { color: oklch(95% 0.005 240); }
+html[data-theme='dark'] .x-build-step-detail { color: oklch(78% 0.01 240); }
+
+/* 聊天 header */
+html[data-theme='dark'] .x-chat-header {
+  background: oklch(18% 0.02 240);
+  border-bottom-color: oklch(28% 0.02 240);
+}
+html[data-theme='dark'] .x-chat-title { color: oklch(95% 0.005 240); }
+html[data-theme='dark'] .x-chat-status { color: oklch(78% 0.01 240); }
+html[data-theme='dark'] .x-status-dot.is-connecting { background: oklch(75% 0.15 80); }
+html[data-theme='dark'] .x-status-dot.is-error { background: oklch(70% 0.20 25); }
+
+/* 聊天气泡 (对方发的) */
+html[data-theme='dark'] .x-bubble {
+  background: oklch(22% 0.02 240);
+  color: oklch(92% 0.005 240);
+  border-color: oklch(28% 0.02 240);
+}
+html[data-theme='dark'] .x-bubble.is-mine {
+  background: oklch(60% 0.22 245);
+  color: #fff;
+  border-color: oklch(60% 0.22 245);
+}
+html[data-theme='dark'] .x-typing { color: oklch(70% 0.18 145); }
+html[data-theme='dark'] .x-bubble.is-mine .x-typing { color: rgba(255, 255, 255, 0.6); }
+
+/* 聊天空状态 */
+html[data-theme='dark'] .x-chat-empty { color: oklch(78% 0.01 240); }
+html[data-theme='dark'] .x-suggestion-btn {
+  background: oklch(22% 0.02 240);
+  border-color: oklch(28% 0.02 240);
+  color: oklch(92% 0.005 240);
+}
+html[data-theme='dark'] .x-suggestion-btn:hover:not(:disabled) {
+  background: oklch(28% 0.04 245);
+  border-color: oklch(60% 0.22 245);
+  color: oklch(95% 0.005 240);
+}
+
+/* 完成态 banner */
+html[data-theme='dark'] .x-complete-banner {
+  background: oklch(22% 0.04 145);
+  border-color: oklch(60% 0.18 145);
+  color: oklch(95% 0.005 240);
+}
+
+/* 聊天输入框 */
+html[data-theme='dark'] .x-chat-input {
+  background: oklch(18% 0.02 240);
+  border-top-color: oklch(28% 0.02 240);
+}
+html[data-theme='dark'] .x-chat-input textarea {
+  background: oklch(22% 0.02 240);
+  border-color: oklch(28% 0.02 240);
+  color: oklch(92% 0.005 240);
+}
+html[data-theme='dark'] .x-chat-input textarea:focus {
+  border-color: oklch(60% 0.22 245);
+  background: oklch(25% 0.03 245);
+}
+
+/* 错误提示 */
+html[data-theme='dark'] .x-error {
+  background: oklch(28% 0.04 25);
+  border-color: oklch(60% 0.20 25);
+  color: oklch(95% 0.005 240);
+}
+
+/* ============================================================
+   Global toast (Element Plus, .x-toast customClass)
+     从 HomeView 提上来 —— 任何 view 都能 ElMessage({customClass:'x-toast'})
+   ============================================================ */
+.x-toast {
+  background: #ffffff !important;
+  border: 1px solid var(--x-hairline) !important;
+  color: var(--x-ink) !important;
+  box-shadow: var(--x-shadow-toast) !important;
+}
+.x-toast .el-message__content {
+  color: var(--x-ink) !important;
+  font-family: var(--x-font-mono) !important;
+  font-size: 13px !important;
+  letter-spacing: 0.4px !important;
+}
+
+@theme inline {
+  --font-heading: var(--font-sans);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+:root {
+  --radius: 0.625rem;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
+}
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.556 0 0);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}

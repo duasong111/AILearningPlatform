@@ -1,0 +1,438 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Knowledge Graph 3D Demo</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(180deg, #f8fbff 0%, #e9f3ff 100%);
+      color: #173a63;
+    }
+    #graph { position: absolute; inset: 0; }
+    #labels {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .node-label {
+      position: absolute;
+      transform: translate(-50%, 14px);
+      font-size: 11px;
+      line-height: 1;
+      white-space: nowrap;
+      color: #184c84;
+      background: rgba(255, 255, 255, 0.82);
+      border: 1px solid rgba(114, 169, 234, 0.42);
+      border-radius: 999px;
+      padding: 3px 7px;
+      box-shadow: 0 4px 14px rgba(92, 140, 197, 0.18);
+      backdrop-filter: blur(4px);
+      text-shadow: 0 1px 0 rgba(255, 255, 255, 0.7);
+    }
+    .panel {
+      position: absolute;
+      z-index: 10;
+      background: rgba(255, 255, 255, 0.76);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(134, 179, 232, 0.28);
+      border-radius: 14px;
+      box-shadow: 0 10px 30px rgba(81, 124, 175, 0.16);
+    }
+    .header {
+      top: 16px;
+      left: 16px;
+      width: 360px;
+      padding: 14px 16px;
+    }
+    .header h1 {
+      margin: 0 0 8px;
+      font-size: 18px;
+    }
+    .header p {
+      margin: 6px 0;
+      font-size: 13px;
+      color: #58779d;
+      line-height: 1.5;
+    }
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 12px;
+      margin-top: 10px;
+      font-size: 12px;
+      color: #31557f;
+    }
+    .legend span {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      display: inline-block;
+    }
+    .toolbar {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      display: flex;
+      gap: 10px;
+      padding: 10px;
+    }
+    .toolbar button {
+      appearance: none;
+      border: 0;
+      border-radius: 10px;
+      padding: 10px 12px;
+      cursor: pointer;
+      color: #ffffff;
+      background: linear-gradient(180deg, #4b93f6 0%, #2b6fda 100%);
+      transition: transform 0.15s ease, opacity 0.15s ease;
+    }
+    .toolbar button.secondary {
+      color: #23508d;
+      background: rgba(235, 244, 255, 0.92);
+      border: 1px solid rgba(121, 169, 230, 0.28);
+    }
+    .toolbar button:hover {
+      transform: translateY(-1px);
+      opacity: 0.92;
+    }
+    .info {
+      right: 16px;
+      bottom: 16px;
+      width: 340px;
+      padding: 14px 16px;
+    }
+    .info h2 {
+      margin: 0 0 8px;
+      font-size: 16px;
+    }
+    .info .empty {
+      font-size: 13px;
+      color: #58779d;
+      line-height: 1.6;
+    }
+    .meta-row {
+      margin: 6px 0;
+      font-size: 13px;
+      color: #33567e;
+    }
+    .meta-row strong {
+      color: #2970c7;
+      margin-right: 6px;
+    }
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .chip {
+      font-size: 12px;
+      color: #20518b;
+      border: 1px solid rgba(106, 160, 228, 0.34);
+      background: rgba(219, 235, 255, 0.72);
+      border-radius: 999px;
+      padding: 4px 8px;
+    }
+  </style>
+</head>
+<body>
+  <div id="graph"></div>
+  <div id="labels"></div>
+
+  <div class="panel header">
+    <h1>Data Structure Knowledge Graph 3D Demo</h1>
+    <p>Rendered by 3d-force-graph. Node color means category, node size means difficulty, and click highlights neighborhood plus camera focus.</p>
+    <p>This file is a standalone prototype. Later you can feed backend knowledge graph data into the same { nodes, links } shape.</p>
+    <div class="legend">
+      <span><i class="dot" style="background:#9ca3af"></i>Mastery 0</span>
+      <span><i class="dot" style="background:#607db8"></i>Mastery 50</span>
+      <span><i class="dot" style="background:#1d4ed8"></i>Mastery 100</span>
+      <span style="margin-left:8px; border-left:1px solid rgba(134,179,232,0.4); padding-left:10px;"><i class="dot" style="background:#3b82f6"></i>Size = Difficulty</span>
+    </div>
+  </div>
+
+  <div class="panel toolbar">
+    <button id="focus-btree">Focus Binary Tree</button>
+    <button id="show-all" class="secondary">Show All</button>
+  </div>
+
+  <div class="panel info" id="info">
+    <h2>Node Detail</h2>
+    <div class="empty">Click any node to inspect details. Start with Binary Tree or Graph to see cluster behavior.</div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/3d-force-graph"></script>
+  <script>
+    const relationColors = {
+      contains: "#3b82f6",
+      prerequisite: "#2563eb",
+      used_in: "#60a5fa",
+      used_by: "#93c5fd",
+      implemented_by: "#bfdbfe",
+      related_to: "#7dd3fc",
+      implements: "#38bdf8",
+      evaluates: "#1d4ed8",
+      solves: "#0ea5e9"
+    };
+
+    // mastery 0-100: gray (#9ca3af) -> blue (#1d4ed8)
+    function lerpMasteryColor(mastery) {
+      const t = Math.max(0, Math.min(100, mastery || 0)) / 100;
+      const r0 = 156, g0 = 163, b0 = 175;
+      const r1 = 29,  g1 = 78,  b1 = 216;
+      const r = Math.round(r0 + (r1 - r0) * t);
+      const g = Math.round(g0 + (g1 - g0) * t);
+      const b = Math.round(b0 + (b1 - b0) * t);
+      return `rgb(${r},${g},${b})`;
+    }
+
+    function masteryNodeColor(node) {
+      if (!highlightNodes.size) return lerpMasteryColor(node.mastery);
+      if (highlightNodes.has(node)) return lerpMasteryColor(node.mastery);
+      return "rgba(191,219,254,0.18)";
+    }
+
+    let fullData = { nodes: [], links: [] };
+
+    // ---- Inline data (from data-structure-map.json) ----
+    const INLINE_RAW_DATA = {"nodes":[{"id":"2","name":"数组","type":"structure","difficulty":1},{"id":"3","name":"链表","type":"structure","difficulty":1},{"id":"4","name":"栈","type":"structure","difficulty":1},{"id":"5","name":"队列","type":"structure","difficulty":1},{"id":"6","name":"哈希表","type":"structure","difficulty":2},{"id":"7","name":"堆","type":"structure","difficulty":2},{"id":"8","name":"树","type":"structure","difficulty":1},{"id":"9","name":"二叉树","type":"structure","difficulty":1},{"id":"10","name":"二叉搜索树","type":"structure","difficulty":2},{"id":"11","name":"AVL树","type":"structure","difficulty":3},{"id":"12","name":"红黑树","type":"structure","difficulty":4},{"id":"13","name":"Trie树","type":"structure","difficulty":3},{"id":"14","name":"B树","type":"structure","difficulty":4},{"id":"15","name":"B+树","type":"structure","difficulty":4},{"id":"16","name":"图","type":"structure","difficulty":2},{"id":"17","name":"DFS","type":"algorithm","difficulty":2},{"id":"18","name":"BFS","type":"algorithm","difficulty":2},{"id":"19","name":"Dijkstra","type":"algorithm","difficulty":4},{"id":"20","name":"拓扑排序","type":"algorithm","difficulty":3},{"id":"21","name":"优先队列","type":"concept","difficulty":2},{"id":"22","name":"回溯算法","type":"concept","difficulty":4},{"id":"23","name":"动态规划","type":"concept","difficulty":5},{"id":"24","name":"时间复杂度","type":"concept","difficulty":1},{"id":"25","name":"空间复杂度","type":"concept","difficulty":1},{"id":"26","name":"TreeMap","type":"application","difficulty":3},{"id":"27","name":"数据库索引","type":"application","difficulty":3},{"id":"28","name":"搜索引擎","type":"application","difficulty":3},{"id":"29","name":"缓存系统","type":"application","difficulty":3},{"id":"30","name":"最短路径问题","type":"application","difficulty":3},{"id":"31","name":"KMP算法","type":"algorithm","difficulty":3},{"id":"32","name":"AC自动机","type":"algorithm","difficulty":5},{"id":"33","name":"字符串哈希","type":"algorithm","difficulty":2},{"id":"34","name":"归并排序","type":"algorithm","difficulty":2},{"id":"35","name":"快速排序","type":"algorithm","difficulty":2},{"id":"36","name":"堆排序","type":"algorithm","difficulty":2},{"id":"37","name":"计数排序","type":"algorithm","difficulty":2},{"id":"38","name":"桶排序","type":"algorithm","difficulty":2},{"id":"39","name":"基数排序","type":"algorithm","difficulty":3},{"id":"40","name":"排序稳定性","type":"concept","difficulty":2},{"id":"41","name":"内部排序","type":"concept","difficulty":1},{"id":"42","name":"外部排序","type":"concept","difficulty":3},{"id":"43","name":"并查集","type":"structure","difficulty":3},{"id":"44","name":"线段树","type":"structure","difficulty":4},{"id":"45","name":"树状数组","type":"structure","difficulty":4},{"id":"46","name":"跳表","type":"structure","difficulty":3},{"id":"47","name":"布隆过滤器","type":"structure","difficulty":3},{"id":"48","name":"Floyd算法","type":"algorithm","difficulty":3},{"id":"49","name":"Prim算法","type":"algorithm","difficulty":3},{"id":"50","name":"Kruskal算法","type":"algorithm","difficulty":3},{"id":"51","name":"Tarjan算法","type":"algorithm","difficulty":5},{"id":"52","name":"最大流","type":"algorithm","difficulty":5},{"id":"53","name":"递归与分治","type":"concept","difficulty":2},{"id":"54","name":"贪心算法","type":"concept","difficulty":3}],"relations":[{"source":"8","target":"9","type":"contains"},{"source":"9","target":"10","type":"contains"},{"source":"10","target":"11","type":"contains"},{"source":"10","target":"12","type":"contains"},{"source":"8","target":"13","type":"contains"},{"source":"8","target":"14","type":"contains"},{"source":"14","target":"15","type":"contains"},{"source":"17","target":"16","type":"used_in"},{"source":"17","target":"8","type":"used_in"},{"source":"17","target":"22","type":"related_to"},{"source":"18","target":"16","type":"used_in"},{"source":"18","target":"8","type":"used_in"},{"source":"19","target":"16","type":"used_in"},{"source":"19","target":"30","type":"solves"},{"source":"20","target":"16","type":"used_in"},{"source":"7","target":"21","type":"implements"},{"source":"21","target":"7","type":"implemented_by"},{"source":"12","target":"26","type":"used_by"},{"source":"15","target":"27","type":"used_by"},{"source":"13","target":"28","type":"used_by"},{"source":"6","target":"29","type":"used_by"},{"source":"10","target":"9","type":"prerequisite"},{"source":"11","target":"10","type":"prerequisite"},{"source":"12","target":"10","type":"prerequisite"},{"source":"15","target":"14","type":"prerequisite"},{"source":"17","target":"18","type":"related_to"},{"source":"17","target":"19","type":"prerequisite"},{"source":"18","target":"19","type":"prerequisite"},{"source":"24","target":"2","type":"evaluates"},{"source":"24","target":"3","type":"evaluates"},{"source":"24","target":"6","type":"evaluates"},{"source":"24","target":"7","type":"evaluates"},{"source":"25","target":"2","type":"evaluates"},{"source":"25","target":"3","type":"evaluates"},{"source":"25","target":"16","type":"evaluates"},{"source":"31","target":"3","type":"used_in"},{"source":"32","target":"3","type":"used_in"},{"source":"32","target":"13","type":"used_in"},{"source":"33","target":"6","type":"used_in"},{"source":"34","target":"53","type":"prerequisite"},{"source":"35","target":"53","type":"prerequisite"},{"source":"35","target":"54","type":"prerequisite"},{"source":"36","target":"7","type":"used_in"},{"source":"37","target":"41","type":"implements"},{"source":"38","target":"41","type":"implements"},{"source":"39","target":"41","type":"implements"},{"source":"42","target":"37","type":"prerequisite"},{"source":"42","target":"38","type":"prerequisite"},{"source":"40","target":"34","type":"evaluates"},{"source":"40","target":"35","type":"evaluates"},{"source":"40","target":"36","type":"evaluates"},{"source":"43","target":"16","type":"used_in"},{"source":"44","target":"8","type":"used_in"},{"source":"44","target":"16","type":"used_in"},{"source":"45","target":"8","type":"used_in"},{"source":"45","target":"44","type":"related_to"},{"source":"46","target":"5","type":"implements"},{"source":"47","target":"6","type":"related_to"},{"source":"48","target":"16","type":"used_in"},{"source":"48","target":"19","type":"related_to"},{"source":"49","target":"16","type":"used_in"},{"source":"49","target":"50","type":"related_to"},{"source":"50","target":"43","type":"used_in"},{"source":"50","target":"16","type":"used_in"},{"source":"51","target":"16","type":"used_in"},{"source":"51","target":"17","type":"prerequisite"},{"source":"52","target":"16","type":"used_in"},{"source":"52","target":"43","type":"used_in"},{"source":"53","target":"17","type":"used_in"},{"source":"53","target":"22","type":"used_in"},{"source":"53","target":"23","type":"used_in"},{"source":"54","target":"49","type":"used_in"},{"source":"54","target":"50","type":"used_in"}]};
+
+    // Generate demo mastery values (deterministic by id for stable display)
+    function pseudoRandomMastery(id) {
+      let hash = 0;
+      const s = String(id);
+      for (let i = 0; i < s.length; i++) {
+        hash = ((hash << 5) - hash + s.charCodeAt(i)) | 0;
+      }
+      return Math.abs(hash) % 101;
+    }
+
+    const elem = document.getElementById("graph");
+    const labelsElem = document.getElementById("labels");
+    const infoElem = document.getElementById("info");
+    const highlightNodes = new Set();
+    const highlightLinks = new Set();
+    const labelElements = new Map();
+    let labelRafId = null;
+    let currentData = fullData;
+
+    const graph = new ForceGraph3D(elem)
+      .backgroundColor("#eef6ff")
+      .graphData(currentData)
+      .nodeLabel(node => `${node.name} | mastery: ${node.mastery}`)
+      .nodeVal(node => 4 + (node.difficulty || 1) * 2.4)
+      .nodeOpacity(0.95)
+      .nodeColor(node => masteryNodeColor(node))
+      .linkColor(link => highlightLinks.size ? (highlightLinks.has(link) ? (relationColors[link.type] || "#93c5fd") : "rgba(147,197,253,0.10)") : (relationColors[link.type] || "#93c5fd"))
+      .linkOpacity(link => highlightLinks.size ? (highlightLinks.has(link) ? 0.92 : 0.08) : 0.48)
+      .linkWidth(link => highlightLinks.has(link) ? 2.8 : 1.1)
+      .linkDirectionalParticles(link => highlightLinks.has(link) ? 3 : 0)
+      .linkDirectionalParticleWidth(2.4)
+      .onNodeClick(node => {
+        setHighlight(node);
+        renderInfo(node);
+        const distance = 160;
+        const distRatio = 1 + distance / Math.hypot(node.x || 1, node.y || 1, node.z || 1);
+        graph.cameraPosition(
+          { x: (node.x || 0) * distRatio, y: (node.y || 0) * distRatio, z: (node.z || 0) * distRatio },
+          node,
+          1000
+        );
+      })
+      .onBackgroundClick(() => {
+        clearHighlight();
+        renderInfo(null);
+      });
+
+    graph.d3Force("charge").strength(-190);
+    graph.d3Force("link").distance(link => link.type === "contains" ? 55 : 90);
+
+    function rebuildLabels() {
+      labelsElem.innerHTML = "";
+      labelElements.clear();
+      currentData.nodes.forEach(node => {
+        const el = document.createElement("div");
+        el.className = "node-label";
+        el.textContent = node.name;
+        labelsElem.appendChild(el);
+        labelElements.set(node.id, el);
+      });
+      scheduleLabelUpdates();
+    }
+
+    function updateLabels() {
+      labelElements.forEach((el, nodeId) => {
+        const node = currentData.nodes.find(item => item.id === nodeId);
+        if (!node || !Number.isFinite(node.x) || !Number.isFinite(node.y) || !Number.isFinite(node.z)) {
+          el.style.display = "none";
+          return;
+        }
+
+        const coords = graph.graph2ScreenCoords(node.x, node.y, node.z);
+        if (!coords || !Number.isFinite(coords.x) || !Number.isFinite(coords.y)) {
+          el.style.display = "none";
+          return;
+        }
+
+        el.style.display = "block";
+        el.style.left = `${coords.x}px`;
+        el.style.top = `${coords.y + 8 + (node.difficulty || 1) * 2}px`;
+        el.style.opacity = highlightNodes.size && !highlightNodes.has(node) ? "0.35" : "0.96";
+        el.style.zIndex = highlightNodes.has(node) ? "3" : "1";
+      });
+      labelRafId = requestAnimationFrame(updateLabels);
+    }
+
+    function scheduleLabelUpdates() {
+      if (labelRafId !== null) return;
+      labelRafId = requestAnimationFrame(updateLabels);
+    }
+
+    function setHighlight(node) {
+      highlightNodes.clear();
+      highlightLinks.clear();
+      highlightNodes.add(node);
+      currentData.links.forEach(link => {
+        const sourceId = typeof link.source === "object" ? link.source.id : link.source;
+        const targetId = typeof link.target === "object" ? link.target.id : link.target;
+        if (sourceId === node.id || targetId === node.id) {
+          highlightLinks.add(link);
+          const sourceNode = currentData.nodes.find(item => item.id === sourceId);
+          const targetNode = currentData.nodes.find(item => item.id === targetId);
+          if (sourceNode) highlightNodes.add(sourceNode);
+          if (targetNode) highlightNodes.add(targetNode);
+        }
+      });
+      graph.nodeColor(graph.nodeColor());
+      graph.linkWidth(graph.linkWidth());
+      graph.linkColor(graph.linkColor());
+      graph.linkOpacity(graph.linkOpacity());
+      graph.linkDirectionalParticles(graph.linkDirectionalParticles());
+      scheduleLabelUpdates();
+    }
+
+    function clearHighlight() {
+      highlightNodes.clear();
+      highlightLinks.clear();
+      graph.nodeColor(graph.nodeColor());
+      graph.linkWidth(graph.linkWidth());
+      graph.linkColor(graph.linkColor());
+      graph.linkOpacity(graph.linkOpacity());
+      graph.linkDirectionalParticles(graph.linkDirectionalParticles());
+      scheduleLabelUpdates();
+    }
+
+    function renderInfo(node) {
+      if (!node) {
+        infoElem.innerHTML = '<h2>Node Detail</h2><div class="empty">Click any node to inspect details. The full data-structure graph is loaded, including all nodes and all relations.</div>';
+        return;
+      }
+
+      const related = currentData.links.filter(link => {
+        const sourceId = typeof link.source === "object" ? link.source.id : link.source;
+        const targetId = typeof link.target === "object" ? link.target.id : link.target;
+        return sourceId === node.id || targetId === node.id;
+      });
+
+      infoElem.innerHTML = `
+        <h2>${node.name}</h2>
+        <div class="meta-row"><strong>Type</strong>${node.type}</div>
+        <div class="meta-row"><strong>Difficulty</strong>${node.difficulty}</div>
+        <div class="meta-row"><strong>Mastery</strong>${node.mastery} / 100</div>
+        <div class="meta-row"><strong>Link Count</strong>${related.length}</div>
+        <div class="meta-row"><strong>Description</strong>${node.description || "N/A"}</div>
+        <div class="chips">${related.slice(0, 8).map(link => `<span class="chip">${link.type}</span>`).join("")}</div>
+      `;
+    }
+
+    function getNeighborhood(centerId, depth = 2) {
+      const nodeMap = new Map(fullData.nodes.map(node => [node.id, node]));
+      const visited = new Set([centerId]);
+      let frontier = new Set([centerId]);
+
+      for (let i = 0; i < depth; i += 1) {
+        const next = new Set();
+        fullData.links.forEach(link => {
+          const sourceId = typeof link.source === "object" ? link.source.id : link.source;
+          const targetId = typeof link.target === "object" ? link.target.id : link.target;
+          if (frontier.has(sourceId) && !visited.has(targetId)) next.add(targetId);
+          if (frontier.has(targetId) && !visited.has(sourceId)) next.add(sourceId);
+        });
+        next.forEach(id => visited.add(id));
+        frontier = next;
+      }
+
+      const nodes = [...visited].map(id => nodeMap.get(id)).filter(Boolean);
+      const nodeIds = new Set(nodes.map(node => node.id));
+      const links = fullData.links.filter(link => {
+        const sourceId = typeof link.source === "object" ? link.source.id : link.source;
+        const targetId = typeof link.target === "object" ? link.target.id : link.target;
+        return nodeIds.has(sourceId) && nodeIds.has(targetId);
+      });
+      return { nodes, links };
+    }
+
+    function showBinaryTreeCluster() {
+      if (!fullData.nodes.length) return;
+      currentData = getNeighborhood("9", 2);
+      graph.graphData(currentData);
+      rebuildLabels();
+      clearHighlight();
+      const node = currentData.nodes.find(item => item.id === "9");
+      if (node) {
+        setHighlight(node);
+        renderInfo(node);
+        graph.cameraPosition({ x: 0, y: 0, z: 220 }, node, 1000);
+      }
+    }
+
+    function showAll() {
+      if (!fullData.nodes.length) return;
+      currentData = fullData;
+      graph.graphData(currentData);
+      rebuildLabels();
+      clearHighlight();
+      renderInfo(null);
+      graph.zoomToFit(1500, 100);
+    }
+
+    function loadInlineData() {
+      const nodes = (INLINE_RAW_DATA.nodes || []).map(node => ({
+        ...node,
+        mastery: pseudoRandomMastery(node.id),
+        description: `${node.type} | difficulty ${node.difficulty}`
+      }));
+      const links = (INLINE_RAW_DATA.relations || []).map(link => ({ ...link }));
+      return { nodes, links };
+    }
+
+    document.getElementById("focus-btree").addEventListener("click", showBinaryTreeCluster);
+    document.getElementById("show-all").addEventListener("click", showAll);
+
+    const inlineData = loadInlineData();
+    fullData = inlineData;
+    currentData = inlineData;
+    graph.graphData(currentData);
+    rebuildLabels();
+    showAll();
+    window.addEventListener("resize", () => {
+      graph.width(window.innerWidth).height(window.innerHeight);
+      scheduleLabelUpdates();
+    });
+  </script>
+</body>
+</html>

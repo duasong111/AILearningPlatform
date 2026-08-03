@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>学径 LearnPath — 项目访问说明</title>
+    <link rel="icon" type="image/svg+xml" href="logo.svg">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --x-canvas: #FFFFFF;
+            --x-canvas-soft: #F8FAFC;
+            --x-canvas-card: #FFFFFF;
+            --x-canvas-mid: #F1F5F9;
+            --x-canvas-tint: #EFF6FF;
+            --x-hairline: #E5E7EB;
+            --x-hairline-strong: #CBD5E1;
+            --x-ink: #0F172A;
+            --x-ink-hover: #1E293B;
+            --x-body: #475569;
+            --x-body-mid: #64748B;
+            --x-mute: #94A3B8;
+            --x-primary: #1E5AE0;
+            --x-primary-hover: #1A4DC4;
+            --x-primary-soft: #DBE7FF;
+            --x-on-primary: #ffffff;
+            --x-success: #10B981;
+            --x-success-soft: #D1FAE5;
+            --x-warning: #F59E0B;
+            --x-warning-soft: #FEF3C7;
+            --x-error: #DC2626;
+            --x-error-soft: #FEE2E2;
+            --x-ink-alpha-06: rgba(15, 23, 42, 0.06);
+            --x-ink-alpha-15: rgba(15, 23, 42, 0.15);
+            --x-ink-alpha-30: rgba(15, 23, 42, 0.30);
+            --x-blue-alpha-06: rgba(30, 90, 224, 0.06);
+            --x-blue-alpha-18: rgba(30, 90, 224, 0.18);
+            --x-rounded-sm: 6px;
+            --x-rounded-md: 10px;
+            --x-rounded-lg: 14px;
+            --x-rounded-xl: 20px;
+            --x-rounded-pill: 9999px;
+            --x-font-display: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            --x-font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+            --x-shadow-card: 0 2px 4px rgba(15, 23, 42, 0.06), 0 8px 24px rgba(15, 23, 42, 0.10);
+            --x-shadow-card-hover: 0 4px 8px rgba(15, 23, 42, 0.08), 0 16px 40px rgba(15, 23, 42, 0.14);
+        }
+
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--x-font-display);
+            background: var(--x-canvas);
+            color: var(--x-ink);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        ::selection {
+            background: var(--x-primary-soft);
+            color: var(--x-ink);
+        }
+
+        .x-container {
+            max-width: 720px;
+            width: 100%;
+        }
+
+        /* ── 导航栏 ── */
+        .x-nav {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 32px;
+            padding: 12px 16px;
+            background: var(--x-canvas-card);
+            border-radius: var(--x-rounded-lg);
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.04);
+            transition: box-shadow 0.3s ease;
+        }
+
+        .x-nav-logo {
+            width: 32px;
+            height: 32px;
+            flex-shrink: 0;
+        }
+
+        .x-nav-logo img {
+            width: 100%;
+            height: 100%;
+        }
+
+        .x-nav-text {
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            color: var(--x-ink);
+        }
+
+        .x-nav-sub {
+            font-size: 12px;
+            color: var(--x-body-mid);
+            margin-left: auto;
+            font-family: var(--x-font-mono);
+            letter-spacing: 0.04em;
+        }
+
+        /* ── Hero ── */
+        .x-hero {
+            background: var(--x-canvas-card);
+            border-radius: var(--x-rounded-xl);
+            padding: 40px 36px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.05);
+            position: relative;
+            overflow: hidden;
+            transition: box-shadow 0.3s ease;
+        }
+
+        .x-hero::before {
+            content: '';
+            position: absolute;
+            top: -80px;
+            right: -80px;
+            width: 240px;
+            height: 240px;
+            background: radial-gradient(circle, var(--x-blue-alpha-06), transparent 70%);
+            pointer-events: none;
+        }
+
+        .x-hero:hover {
+            box-shadow: 0 4px 8px rgba(15, 23, 42, 0.06), 0 16px 40px rgba(15, 23, 42, 0.08);
+        }
+
+        .x-hero-eyebrow {
+            font-family: var(--x-font-mono);
+            font-size: 12px;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+            color: var(--x-primary);
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .x-hero-title {
+            font-size: 32px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            color: var(--x-ink);
+            margin-bottom: 12px;
+            line-height: 1.15;
+        }
+
+        .x-hero-sub {
+            font-size: 15px;
+            color: var(--x-body);
+            line-height: 1.7;
+            max-width: 540px;
+        }
+
+        .x-hero-sub strong {
+            color: var(--x-primary);
+            font-weight: 600;
+        }
+
+        /* ── 卡片 —— 更浅的阴影 ── */
+        .x-card {
+            background: var(--x-canvas-card);
+            border-radius: var(--x-rounded-lg);
+            padding: 24px 28px;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.05);
+            transition: box-shadow 0.3s ease, transform 0.3s ease;
+            margin-bottom: 16px;
+        }
+
+        .x-card:hover {
+            box-shadow: 0 4px 8px rgba(15, 23, 42, 0.06), 0 16px 40px rgba(15, 23, 42, 0.08);
+            transform: translateY(-2px);
+        }
+
+        .x-card-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--x-body-mid);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .x-card-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--x-hairline);
+        }
+
+        /* ── 步骤条 ── */
+        .x-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .x-step {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+        }
+
+        .x-step-num {
+            flex-shrink: 0;
+            width: 28px;
+            height: 28px;
+            background: var(--x-primary);
+            color: var(--x-on-primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 700;
+            margin-top: 1px;
+        }
+
+        .x-step-text {
+            font-size: 15px;
+            color: var(--x-body);
+            line-height: 1.7;
+        }
+
+        .x-step-text strong {
+            color: var(--x-ink);
+            font-weight: 600;
+        }
+
+        /* ── 按钮组 ── */
+        .x-btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .x-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            padding: 14px 20px;
+            border-radius: var(--x-rounded-md);
+            font-size: 15px;
+            font-weight: 600;
+            font-family: var(--x-font-display);
+            text-align: center;
+            text-decoration: none;
+            letter-spacing: 0.01em;
+            cursor: pointer;
+            transition: background 0.18s, box-shadow 0.18s, transform 0.15s;
+            border: none;
+        }
+
+        .x-btn:active {
+            transform: scale(0.98);
+        }
+
+        .x-btn-primary {
+            background: var(--x-primary);
+            color: var(--x-on-primary);
+            box-shadow: 0 4px 12px rgba(30, 90, 224, 0.25);
+        }
+
+        .x-btn-primary:hover {
+            background: var(--x-primary-hover);
+            box-shadow: 0 6px 16px rgba(30, 90, 224, 0.35);
+        }
+
+        .x-btn-secondary {
+            background: var(--x-canvas-soft);
+            color: var(--x-ink);
+            border: 1px solid var(--x-hairline);
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+        }
+
+        .x-btn-secondary:hover {
+            background: var(--x-canvas-mid);
+            box-shadow: 0 2px 6px rgba(15, 23, 42, 0.06);
+        }
+
+        .x-btn-domain {
+            font-family: var(--x-font-mono);
+            font-size: 12px;
+            font-weight: 400;
+            color: var(--x-body-mid);
+            margin-left: auto;
+        }
+
+        /* ── 提示条 —— 更淡 ── */
+        .x-notice {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 12px 16px;
+            background: var(--x-canvas-soft);
+            border: 1px solid var(--x-hairline);
+            border-radius: var(--x-rounded-md);
+        }
+
+        .x-notice-icon {
+            font-size: 14px;
+            flex-shrink: 0;
+            margin-top: 2px;
+            opacity: 0.5;
+        }
+
+        .x-notice p {
+            font-size: 14px;
+            color: var(--x-body);
+            line-height: 1.6;
+        }
+
+        .x-notice strong {
+            color: var(--x-ink);
+            font-weight: 500;
+        }
+
+        /* ── 账号框 ── */
+        .x-account-box {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .x-account-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .x-account-key {
+            font-size: 13px;
+            color: var(--x-body-mid);
+            min-width: 40px;
+            flex-shrink: 0;
+        }
+
+        .x-account-val {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-family: var(--x-font-mono);
+            font-size: 14px;
+            color: var(--x-ink);
+            background: var(--x-canvas-soft);
+            border: 1px solid var(--x-hairline);
+            border-radius: var(--x-rounded-sm);
+            padding: 6px 12px;
+            user-select: all;
+            cursor: pointer;
+            transition: border-color 0.15s, background 0.15s;
+            position: relative;
+        }
+
+        .x-account-val:hover {
+            border-color: var(--x-primary);
+            background: var(--x-primary-soft);
+        }
+
+        .x-account-val.copied::after {
+            content: '✓ 已复制';
+            position: absolute;
+            right: -76px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-family: var(--x-font-display);
+            font-size: 11px;
+            color: var(--x-success);
+            font-weight: 500;
+            white-space: nowrap;
+            animation: x-fade-in 0.2s ease;
+        }
+
+        @keyframes x-fade-in {
+            from { opacity: 0; transform: translateY(-50%) translateX(-4px); }
+            to { opacity: 1; transform: translateY(-50%) translateX(0); }
+        }
+
+        .x-account-copy {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 8px;
+            background: transparent;
+            border: 1px solid var(--x-hairline);
+            border-radius: var(--x-rounded-sm);
+            font-family: var(--x-font-display);
+            font-size: 11px;
+            color: var(--x-body-mid);
+            cursor: pointer;
+            transition: background 0.12s, border-color 0.12s, color 0.12s;
+        }
+
+        .x-account-copy:hover {
+            background: var(--x-primary-soft);
+            border-color: var(--x-primary);
+            color: var(--x-primary);
+        }
+
+        .x-account-copy.copied {
+            background: var(--x-success-soft);
+            border-color: var(--x-success);
+            color: var(--x-success);
+        }
+
+        /* ── 联系方式 ── */
+        .x-contact {
+            display: flex;
+            gap: 24px;
+            flex-wrap: wrap;
+        }
+
+        .x-contact-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: var(--x-body);
+        }
+
+        .x-contact-item a {
+            color: var(--x-primary);
+            text-decoration: none;
+        }
+
+        .x-contact-item a:hover {
+            text-decoration: underline;
+        }
+
+        /* ── Footer ── */
+        .x-footer {
+            text-align: center;
+            padding: 24px 0 8px;
+            font-size: 12px;
+            color: var(--x-mute);
+            font-family: var(--x-font-mono);
+            letter-spacing: 0.06em;
+        }
+
+        /* ── 卡片入场动画 ── */
+        .x-card,
+        .x-hero,
+        .x-nav {
+            opacity: 0;
+            transform: translateY(12px);
+            animation: x-card-in 0.5s ease forwards;
+        }
+
+        .x-nav { animation-delay: 0.05s; }
+        .x-hero { animation-delay: 0.12s; }
+        .x-card:nth-of-type(1) { animation-delay: 0.2s; }
+        .x-card:nth-of-type(2) { animation-delay: 0.28s; }
+        .x-card:nth-of-type(3) { animation-delay: 0.36s; }
+        .x-card:nth-of-type(4) { animation-delay: 0.44s; }
+        .x-card:nth-of-type(5) { animation-delay: 0.52s; }
+
+        @keyframes x-card-in {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ── 响应式 ── */
+        @media (max-width: 600px) {
+            body {
+                padding: 20px 12px;
+            }
+
+            .x-hero {
+                padding: 28px 20px;
+            }
+
+            .x-hero-title {
+                font-size: 24px;
+            }
+
+            .x-card {
+                padding: 18px 16px;
+            }
+
+            .x-account-row {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 6px;
+            }
+
+            .x-account-val.copied::after {
+                right: auto;
+                left: 0;
+                top: calc(100% + 4px);
+                transform: none;
+            }
+
+            .x-contact {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .x-nav-sub {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="x-container">
+        <!-- 导航 -->
+        <nav class="x-nav">
+            <div class="x-nav-logo">
+                <img src="logo.svg" alt="学径" />
+            </div>
+            <span class="x-nav-text">学径 LearnPath</span>
+            <span class="x-nav-sub">评审访问指南</span>
+        </nav>
+
+        <!-- Hero -->
+        <section class="x-hero">
+            <p class="x-hero-eyebrow">评审专用</p>
+            <h1 class="x-hero-title">项目访问说明</h1>
+            <p class="x-hero-sub">
+                尊敬的评委老师，欢迎您参与本次评审。<br />
+                系统已部署于云端，点击下方入口即可访问 <strong>学径 · AI 学习助手</strong>。
+            </p>
+        </section>
+
+        <!-- 访问入口 -->
+        <div class="x-card">
+            <p class="x-card-title">访问入口</p>
+            <div class="x-btn-group">
+                <a href="http://<YOUR_HOST:PORT>" target="_blank" class="x-btn x-btn-primary">
+                    <span>访问系统</span>
+                    <span class="x-btn-domain">&lt;YOUR_HOST:PORT&gt;</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- 使用步骤 -->
+        <div class="x-card">
+            <p class="x-card-title">使用步骤</p>
+            <div class="x-steps">
+                <div class="x-step">
+                    <span class="x-step-num">1</span>
+                    <span class="x-step-text"><strong>点击上方按钮</strong>，直接跳转至系统页面</span>
+                </div>
+                <div class="x-step">
+                    <span class="x-step-num">2</span>
+                    <span class="x-step-text">使用下方账号登录，即可体验全部功能</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 提示 -->
+        <div class="x-card">
+            <p class="x-card-title">温馨提示</p>
+            <div class="x-notice">
+                <span class="x-notice-icon">🔒</span>
+                <p>由于服务器未配置 SSL 证书，访问时浏览器可能会提示"不安全"或"非私密连接"，这是正常的，点击 <strong>「高级/继续访问」</strong> 即可正常进入系统。</p>
+            </div>
+        </div>
+
+        <div class="x-card">
+            <p class="x-card-title">说明</p>
+            <div class="x-notice">
+                <span class="x-notice-icon">📌</span>
+                <p>推荐使用 <strong>Chrome</strong> 或 <strong>Edge</strong> 浏览器访问，以获得最佳体验。</p>
+            </div>
+        </div>
+
+        <!-- 示例账号 -->
+        <div class="x-card">
+            <p class="x-card-title">示例账号</p>
+            <p style="font-size:13px;color:var(--x-body-mid);margin:-8px 0 16px;">评委专用登录信息</p>
+            <div class="x-account-box">
+                <div class="x-account-row">
+                    <span class="x-account-key">账号</span>
+                    <span class="x-account-val" onclick="copyToClipboard(this, 'Admin123@qq.com')">Admin123@qq.com</span>
+                    <button class="x-account-copy" onclick="copyBtn(this, 'Admin123@qq.com')">复制</button>
+                </div>
+                <div class="x-account-row">
+                    <span class="x-account-key">密码</span>
+                    <span class="x-account-val" onclick="copyToClipboard(this, 'Admin123')">Admin123</span>
+                    <button class="x-account-copy" onclick="copyBtn(this, 'Admin123')">复制</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 联系方式 -->
+        <div class="x-card">
+            <p class="x-card-title">联系方式</p>
+            <div class="x-contact">
+                <div class="x-contact-item">📧 <a href="mailto:857592710@qq.com">857592710@qq.com</a></div>
+                <div class="x-contact-item">📱 18911311690</div>
+            </div>
+        </div>
+
+        <div class="x-footer">
+            感谢您的评审 · 学径 LearnPath
+        </div>
+    </div>
+
+    <script>
+        function copyToClipboard(el, text) {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(() => {
+                    showCopied(el);
+                });
+            } else {
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                ta.style.position = 'fixed';
+                ta.style.opacity = '0';
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+                showCopied(el);
+            }
+        }
+
+        function copyBtn(el, text) {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(() => {
+                    el.classList.add('copied');
+                    el.textContent = '已复制';
+                    setTimeout(() => {
+                        el.classList.remove('copied');
+                        el.textContent = '复制';
+                    }, 1800);
+                });
+            } else {
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                ta.style.position = 'fixed';
+                ta.style.opacity = '0';
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+                el.classList.add('copied');
+                el.textContent = '已复制';
+                setTimeout(() => {
+                    el.classList.remove('copied');
+                    el.textContent = '复制';
+                }, 1800);
+            }
+        }
+
+        function showCopied(el) {
+            el.classList.add('copied');
+            setTimeout(() => el.classList.remove('copied'), 1800);
+        }
+    </script>
+</body>
+</html>

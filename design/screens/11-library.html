@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>学径 — 学习书架</title>
+<link rel="stylesheet" href="../css/tokens.css" />
+<style>
+  body { background: var(--bg); }
+  .page-wrap { min-height: 100vh; }
+  .page-body { padding: var(--sp-8) var(--sp-6); max-width: var(--content-max); margin: 0 auto; }
+
+  .page-header {
+    display: flex; align-items: flex-end; justify-content: space-between;
+    margin-bottom: var(--sp-6);
+  }
+  .page-header h1 { font-family: var(--font-display); font-size: var(--text-2xl); font-weight: 700; }
+  .page-header-sub { font-size: var(--text-sm); color: var(--muted); margin-top: var(--sp-1); }
+
+  /* Filter bar */
+  .filter-bar {
+    display: flex; gap: var(--sp-3); align-items: center;
+    margin-bottom: var(--sp-6); flex-wrap: wrap;
+  }
+  .filter-search {
+    flex: 1; min-width: 200px;
+    display: flex; align-items: center; gap: var(--sp-2);
+    padding: var(--sp-2) var(--sp-4);
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+    background: var(--surface);
+  }
+  .filter-search input {
+    border: none; outline: none; background: transparent;
+    font-size: var(--text-sm); flex: 1;
+  }
+  .filter-search input::placeholder { color: var(--muted); }
+  .filter-chip {
+    padding: var(--sp-2) var(--sp-3);
+    border: 1px solid var(--border);
+    border-radius: var(--r-full);
+    font-size: var(--text-sm);
+    color: var(--fg-secondary);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .filter-chip:hover { border-color: var(--primary); color: var(--primary); }
+  .filter-chip.active { background: var(--primary-light); border-color: var(--primary); color: var(--primary); }
+
+  /* Resource grid */
+  .lib-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--sp-4);
+  }
+  .lib-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--r-lg); overflow: hidden;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .lib-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+
+  .lib-thumb {
+    height: 100px;
+    display: grid; place-items: center;
+    font-size: 28px;
+    position: relative;
+  }
+  .lib-thumb-doc { background: linear-gradient(135deg, oklch(96% 0.01 240), oklch(93% 0.015 240)); }
+  .lib-thumb-note { background: linear-gradient(135deg, var(--secondary-light), oklch(94% 0.03 168)); }
+  .lib-thumb-ppt { background: linear-gradient(135deg, var(--primary-light), oklch(93% 0.04 255)); }
+  .lib-thumb-video { background: linear-gradient(135deg, oklch(22% 0.02 240), oklch(28% 0.03 240)); color: white; }
+  .lib-thumb-mind { background: linear-gradient(135deg, var(--ai-light), oklch(94% 0.04 280)); }
+  .lib-thumb-fav { background: linear-gradient(135deg, var(--warning-light), oklch(94% 0.03 80)); }
+
+  .lib-type-badge {
+    position: absolute; top: var(--sp-2); right: var(--sp-2);
+    padding: 2px 6px; border-radius: var(--r-sm);
+    font-size: 10px; font-weight: 600;
+    background: oklch(100% 0 0 / 0.8);
+    color: var(--fg-secondary);
+  }
+
+  .lib-info { padding: var(--sp-4); }
+  .lib-title { font-weight: 600; font-size: var(--text-sm); color: var(--fg); margin-bottom: var(--sp-1); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .lib-meta { font-size: var(--text-xs); color: var(--muted); }
+
+  @media (max-width: 900px) { .lib-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 500px) { .lib-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+  <div id="nav-slot" data-active="library"></div>
+  <div class="page-wrap">
+    <div class="page-body">
+      <div class="page-header anim-fade-up">
+        <div>
+          <h1>学习书架</h1>
+          <div class="page-header-sub">个人知识资源中心 · 28 份资料</div>
+        </div>
+        <button class="btn btn-secondary btn-sm">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          上传资料
+        </button>
+      </div>
+
+      <div class="filter-bar anim-fade-up anim-delay-1">
+        <div class="filter-search">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--muted)"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input placeholder="搜索学习资料…" />
+        </div>
+        <div class="filter-chip active">全部</div>
+        <div class="filter-chip">AI 生成</div>
+        <div class="filter-chip">笔记</div>
+        <div class="filter-chip">收藏</div>
+        <div class="filter-chip">上传</div>
+      </div>
+
+      <div class="lib-grid">
+        <div class="lib-card anim-fade-up anim-delay-1">
+          <div class="lib-thumb lib-thumb-ppt">▦<span class="lib-type-badge">PPT</span></div>
+          <div class="lib-info">
+            <div class="lib-title">线性回归与最小二乘法 — 课件</div>
+            <div class="lib-meta">AI 生成 · 18 页 · 昨天</div>
+          </div>
+        </div>
+
+        <div class="lib-card anim-fade-up anim-delay-2">
+          <div class="lib-thumb lib-thumb-doc">📄<span class="lib-type-badge">讲义</span></div>
+          <div class="lib-info">
+            <div class="lib-title">卷积神经网络学习讲义</div>
+            <div class="lib-meta">AI 生成 · 24 页 · 上周</div>
+          </div>
+        </div>
+
+        <div class="lib-card anim-fade-up anim-delay-3">
+          <div class="lib-thumb lib-thumb-mind">◈<span class="lib-type-badge">思维导图</span></div>
+          <div class="lib-info">
+            <div class="lib-title">机器学习算法分类总览</div>
+            <div class="lib-meta">AI 生成 · 上周</div>
+          </div>
+        </div>
+
+        <div class="lib-card anim-fade-up anim-delay-4">
+          <div class="lib-thumb lib-thumb-note">📝<span class="lib-type-badge">笔记</span></div>
+          <div class="lib-info">
+            <div class="lib-title">梯度下降法推导笔记</div>
+            <div class="lib-meta">我的笔记 · 3 天前</div>
+          </div>
+        </div>
+
+        <div class="lib-card anim-fade-up anim-delay-3">
+          <div class="lib-thumb lib-thumb-video">▶<span class="lib-type-badge">视频</span></div>
+          <div class="lib-info">
+            <div class="lib-title">神经网络前向传播动画讲解</div>
+            <div class="lib-meta">AI 生成 · 12 分钟 · 3 天前</div>
+          </div>
+        </div>
+
+        <div class="lib-card anim-fade-up anim-delay-4">
+          <div class="lib-thumb lib-thumb-doc">📄<span class="lib-type-badge">实验</span></div>
+          <div class="lib-info">
+            <div class="lib-title">Scikit-learn 分类器实验指导</div>
+            <div class="lib-meta">AI 生成 · 含代码 · 上周</div>
+          </div>
+        </div>
+
+        <div class="lib-card anim-fade-up anim-delay-5">
+          <div class="lib-thumb lib-thumb-fav">⭐<span class="lib-type-badge">收藏</span></div>
+          <div class="lib-info">
+            <div class="lib-title">3Blue1Brown: 神经网络系列</div>
+            <div class="lib-meta">收藏 · 外部链接 · 上月</div>
+          </div>
+        </div>
+
+        <div class="lib-card anim-fade-up anim-delay-6">
+          <div class="lib-thumb lib-thumb-note">📝<span class="lib-type-badge">笔记</span></div>
+          <div class="lib-info">
+            <div class="lib-title">Python NumPy 常用操作速查</div>
+            <div class="lib-meta">我的笔记 · 上月</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="../js/nav.js"></script>
+</body>
+</html>

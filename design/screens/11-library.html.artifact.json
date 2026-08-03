@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "kind": "html",
+  "title": "screens/11-library.html",
+  "entry": "screens/11-library.html",
+  "renderer": "html",
+  "status": "complete",
+  "exports": [
+    "html",
+    "pdf",
+    "zip"
+  ],
+  "createdAt": "2026-06-11T04:15:30.362Z",
+  "updatedAt": "2026-06-11T04:15:30.362Z",
+  "metadata": {
+    "inferred": true,
+    "reconciled": true
+  }
+}

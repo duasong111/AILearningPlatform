@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "kind": "html",
+  "title": "screens/12-dashboard.html",
+  "entry": "screens/12-dashboard.html",
+  "renderer": "html",
+  "status": "complete",
+  "exports": [
+    "html",
+    "pdf",
+    "zip"
+  ],
+  "createdAt": "2026-06-11T04:16:59.092Z",
+  "updatedAt": "2026-06-11T04:16:59.092Z",
+  "metadata": {
+    "inferred": true,
+    "reconciled": true
+  }
+}

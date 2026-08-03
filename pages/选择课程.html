@@ -1,0 +1,1236 @@
+<!doctype html>
+<html lang="zh-CN"><head><script data-od-sandbox-shim="">(function(){
+  function makeStore(){
+    var data = {};
+    var api = {
+      getItem: function(k){ return Object.prototype.hasOwnProperty.call(data, k) ? data[k] : null; },
+      setItem: function(k, v){ data[k] = String(v); },
+      removeItem: function(k){ delete data[k]; },
+      clear: function(){ data = {}; },
+      key: function(i){ return Object.keys(data)[i] || null; }
+    };
+    Object.defineProperty(api, 'length', { get: function(){ return Object.keys(data).length; } });
+    return api;
+  }
+  function tryShim(name){
+    var works = false;
+    try { works = !!window[name] && typeof window[name].getItem === 'function'; void window[name].length; }
+    catch (_) { works = false; }
+    if (works) return;
+    try { Object.defineProperty(window, name, { configurable: true, value: makeStore() }); }
+    catch (_) { try { window[name] = makeStore(); } catch (__) {} }
+  }
+  tryShim('localStorage');
+  tryShim('sessionStorage');
+  document.addEventListener('click', (e) => {
+    if (!e.target || !(e.target instanceof Element)) return;
+    var link = e.target.closest('a[href]');
+    if (!link) return;
+    var href = link.getAttribute('href');
+    if (href === null) return;
+    var isAnchor = href.startsWith('#') || href === '';
+    if (isAnchor) {
+      e.preventDefault();
+      if (href === '' || href === '#') {
+        window.scrollTo({ top: 0 });
+        history.replaceState(null, '', ' ');
+      } else {
+        var targetId = href.slice(1);
+        var target = targetId ? document.getElementById(targetId) : null;
+        if (target) {
+          target.scrollIntoView();
+          location.hash === href && history.replaceState(null, '', ' ');
+          location.hash = href;
+        }
+      }
+    } else if (link.getAttribute('target') === '_blank') {
+      e.preventDefault();
+      let safe = false;
+      try {
+        var url = new URL(href, location.href);
+        safe =
+          url.protocol === 'http:' ||
+          url.protocol === 'https:' ||
+          url.protocol === 'mailto:';
+      } catch (_) {}
+      safe && window.open(href, '_blank', 'noopener,noreferrer');
+    }
+  });
+})();</script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Atelier · 2026 春季 课程目录</title>
+<style>
+  /* ===========================================================
+     ATELIER — 课程目录（横向滚动 · 鼠标滚轮 · 中央选中）
+     视觉方向：浅色科技感
+       bg  : 近白、极淡冷调
+       ink : 深石板
+       accent : 电光蓝
+       font : 现代 sans + 等宽 metadata
+     =========================================================== */
+  :root {
+    --bg:        oklch(98.5% 0.005 240);
+    --surface:   oklch(100% 0 0);
+    --ink:       oklch(20% 0.022 250);
+    --muted:     oklch(48% 0.018 250);
+    --hairline:  oklch(92% 0.005 240);
+    --hairline-strong: oklch(82% 0.008 240);
+    --accent:    oklch(60% 0.20 245);
+    --accent-soft: oklch(94% 0.04 245);
+
+    --card-w: 320px;
+    --card-h: 440px;
+    --card-gap: 32px;
+    --header-h: 72px;
+    --detail-h: 220px;
+    --hud-h: 52px;
+
+    --font-display: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'PingFang SC', 'Hiragino Sans GB', system-ui, sans-serif;
+    --font-body:    'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'PingFang SC', 'Hiragino Sans GB', system-ui, sans-serif;
+    --font-mono:    ui-monospace, 'SF Mono', 'JetBrains Mono', 'IBM Plex Mono', Menlo, 'Cascadia Mono', monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    overflow: hidden;
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: "ss01", "cv11", "tnum";
+  }
+
+  /* ==== 浅色冷调科技感：点阵网格背景 ==== */
+  body {
+    display: flex;
+    flex-direction: column;
+    user-select: none;
+    cursor: default;
+    background-color: var(--bg);
+    background-image:
+      radial-gradient(circle at 1px 1px, oklch(88% 0.008 240) 1px, transparent 0);
+    background-size: 24px 24px;
+    background-position: -1px -1px;
+  }
+
+  /* ==== 顶部状态条 ==== */
+  .masthead {
+    height: var(--header-h);
+    padding: 0 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--hairline);
+    background: oklch(98.5% 0.005 240 / 0.85);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    flex-shrink: 0;
+    z-index: 10;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .brand-mark {
+    width: 30px;
+    height: 30px;
+    border: 1.5px solid var(--ink);
+    border-radius: 6px;
+    position: relative;
+    display: grid;
+    place-items: center;
+  }
+  .brand-mark::before {
+    content: "";
+    width: 9px;
+    height: 9px;
+    background: var(--accent);
+    border-radius: 2px;
+  }
+
+  .brand-name {
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.022em;
+    line-height: 1;
+    color: var(--ink);
+  }
+
+  .brand-tag {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    padding-top: 2px;
+  }
+
+  .masthead-meta {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+  }
+
+  .masthead-meta .item {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .masthead-meta strong { color: var(--ink); font-weight: 600; }
+
+  /* 脉动状态点 — 科技感 live indicator */
+  .live-dot {
+    width: 7px; height: 7px;
+    background: var(--accent);
+    border-radius: 50%;
+    position: relative;
+    display: inline-block;
+  }
+  .live-dot::before {
+    content: "";
+    position: absolute;
+    inset: -3px;
+    border-radius: 50%;
+    background: var(--accent);
+    opacity: 0.4;
+    animation: pulse 1.8s ease-out infinite;
+  }
+  @keyframes pulse {
+    0%   { transform: scale(0.8); opacity: 0.5; }
+    80%  { transform: scale(2.2); opacity: 0; }
+    100% { transform: scale(2.2); opacity: 0; }
+  }
+
+  /* ==== STAGE ==== */
+  .stage {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+    min-height: 0;
+  }
+
+  .carousel {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    min-height: 0;
+  }
+
+  /* 边缘冷调 fade */
+  .carousel::before, .carousel::after {
+    content: "";
+    position: absolute;
+    top: 0; bottom: 0;
+    width: 120px;
+    pointer-events: none;
+    z-index: 5;
+  }
+  .carousel::before { left: 0; background: linear-gradient(to right, var(--bg) 25%, transparent); }
+  .carousel::after  { right: 0; background: linear-gradient(to left, var(--bg) 25%, transparent); }
+
+  /* 中央刻度线 — 视觉锚点 */
+  .center-axis {
+    position: absolute;
+    top: 0; bottom: 0;
+    left: 50%;
+    width: 1px;
+    background: var(--accent);
+    opacity: 0.25;
+    z-index: 4;
+    pointer-events: none;
+  }
+  .center-axis::before, .center-axis::after {
+    content: "";
+    position: absolute;
+    left: -3px;
+    width: 7px;
+    height: 7px;
+    background: var(--accent);
+    transform: rotate(45deg);
+  }
+  .center-axis::before { top: 12px; }
+  .center-axis::after  { bottom: 12px; }
+
+  .track {
+    display: flex;
+    gap: var(--card-gap);
+    padding: 0 calc(50vw - var(--card-w) / 2);
+    will-change: transform;
+    align-items: center;
+  }
+
+  /* ==== 卡片 ==== */
+  .card {
+    flex-shrink: 0;
+    width: var(--card-w);
+    height: var(--card-h);
+    background: var(--surface);
+    border: 1px solid var(--hairline);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    cursor: pointer;
+    overflow: hidden;
+    transition:
+      transform 0.55s cubic-bezier(0.2, 0.8, 0.2, 1),
+      box-shadow 0.55s cubic-bezier(0.2, 0.8, 0.2, 1),
+      opacity 0.55s cubic-bezier(0.2, 0.8, 0.2, 1),
+      border-color 0.55s cubic-bezier(0.2, 0.8, 0.2, 1);
+    opacity: 0.36;
+    transform: scale(0.92) translateY(0);
+    border-radius: 4px;
+  }
+
+  /* 卡片顶部 accent 线 */
+  .card::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--accent);
+    transform: scaleX(0);
+    transform-origin: left center;
+    z-index: 5;
+    transition: transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .card.active::before { transform: scaleX(1); }
+
+  /* 角标 — 科技感装饰，active 才显示 */
+  .card-corner {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border-color: var(--accent);
+    border-style: solid;
+    z-index: 6;
+    opacity: 0;
+    transition: opacity 0.35s ease;
+  }
+  .card-corner.tl { top: 8px;    left: 8px;    border-width: 1.5px 0 0 1.5px; }
+  .card-corner.tr { top: 8px;    right: 8px;   border-width: 1.5px 1.5px 0 0; }
+  .card-corner.bl { bottom: 8px; left: 8px;    border-width: 0 0 1.5px 1.5px; }
+  .card-corner.br { bottom: 8px; right: 8px;   border-width: 0 1.5px 1.5px 0; }
+  .card.active .card-corner { opacity: 1; }
+
+  .card-cover {
+    height: 58%;
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding: 22px 22px 16px;
+    overflow: hidden;
+    border-bottom: 1px solid var(--hairline);
+  }
+
+  /* 封面内部网格 — 科技感装饰 */
+  .card-cover::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(to right, var(--cover-grid, rgba(0,0,0,0.04)) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--cover-grid, rgba(0,0,0,0.04)) 1px, transparent 1px);
+    background-size: 22px 22px;
+    pointer-events: none;
+  }
+
+  .card-num {
+    font-family: var(--font-display);
+    font-size: 80px;
+    font-weight: 600;
+    line-height: 0.85;
+    letter-spacing: -0.05em;
+    color: var(--cover-fg, var(--ink));
+    font-variant-numeric: tabular-nums;
+    z-index: 1;
+  }
+
+  .card-mark {
+    width: 28px;
+    height: 28px;
+    flex-shrink: 0;
+    color: var(--cover-fg, var(--ink));
+    z-index: 1;
+  }
+  .card-mark svg { width: 100%; height: 100%; display: block; }
+
+  .card-meta-cover {
+    position: absolute;
+    bottom: 14px;
+    left: 22px;
+    right: 22px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--cover-fg, var(--ink));
+    opacity: 0.78;
+    z-index: 1;
+  }
+
+  .card-body {
+    flex: 1;
+    padding: 18px 22px 18px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    background: var(--surface);
+  }
+
+  .card-title {
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 600;
+    line-height: 1.18;
+    letter-spacing: -0.018em;
+    color: var(--ink);
+  }
+
+  .card-sub {
+    font-family: var(--font-body);
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.45;
+    margin-top: 6px;
+  }
+
+  .card-foot {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+
+  .card-instructor {
+    font-family: var(--font-body);
+    font-size: 12.5px;
+    color: var(--ink);
+    line-height: 1.3;
+    font-weight: 500;
+  }
+  .card-instructor .weeks {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin-top: 3px;
+    font-weight: 400;
+  }
+
+  .card-arrow {
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    line-height: 1;
+    transform: translateX(0);
+    transition: transform 0.3s ease;
+  }
+
+  .card.active {
+    opacity: 1;
+    transform: scale(1.06) translateY(-14px);
+    box-shadow:
+      0 1px 0 0 var(--accent) inset,
+      0 30px 60px -28px rgba(20, 30, 80, 0.35),
+      0 12px 28px -16px rgba(20, 30, 80, 0.18);
+    border-color: var(--accent);
+    z-index: 2;
+  }
+  .card.adjacent { opacity: 0.7; }
+  .card:hover .card-arrow { transform: translateX(4px); }
+
+  /* ==== 详情区 ==== */
+  .detail {
+    height: var(--detail-h);
+    border-top: 1px solid var(--hairline);
+    padding: 24px 40px 22px;
+    display: grid;
+    grid-template-columns: 1.05fr 2.3fr 1.4fr;
+    gap: 36px;
+    background: oklch(99.5% 0.003 240);
+    flex-shrink: 0;
+    transition: opacity 0.25s ease;
+    position: relative;
+  }
+  .detail.flash { opacity: 0.35; }
+
+  .detail-col { transition: opacity 0.3s ease; }
+
+  .kicker {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .kicker::before { content: "//"; color: var(--accent); }
+
+  .code-block {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--ink);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .code-block .num { color: var(--accent); font-weight: 600; }
+  .cat-block {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+  }
+  .weeks-block {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--ink);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin-top: 18px;
+    padding-top: 14px;
+    border-top: 1px solid var(--hairline);
+  }
+
+  .detail-title {
+    font-family: var(--font-display);
+    font-size: 30px;
+    font-weight: 600;
+    line-height: 1.12;
+    letter-spacing: -0.025em;
+    color: var(--ink);
+    margin-bottom: 12px;
+  }
+  .detail-body {
+    font-family: var(--font-body);
+    font-size: 13.5px;
+    line-height: 1.65;
+    color: var(--ink);
+    max-width: 64ch;
+  }
+
+  .dl {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    column-gap: 18px;
+    row-gap: 9px;
+    font-size: 12px;
+  }
+  .dl dt {
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    color: var(--muted);
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    padding-top: 2px;
+  }
+  .dl dd {
+    font-family: var(--font-body);
+    color: var(--ink);
+    line-height: 1.4;
+  }
+
+  /* ==== 底部状态条 ==== */
+  .hud {
+    height: var(--hud-h);
+    padding: 0 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-top: 1px solid var(--hairline);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    flex-shrink: 0;
+    background: oklch(99% 0.003 240 / 0.85);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+  }
+
+  .hud-counter {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .hud-counter .num {
+    color: var(--ink);
+    font-weight: 600;
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+  }
+  .hud-counter .total { color: var(--muted); }
+
+  .hud-progress {
+    width: 220px;
+    height: 1px;
+    background: var(--hairline-strong);
+    position: relative;
+    margin-left: 10px;
+  }
+  .hud-progress::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 8px; height: 8px;
+    background: var(--accent);
+    border-radius: 50%;
+    transform: translate(calc(var(--progress, 0px) - 4px), -50%);
+    transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+    box-shadow: 0 0 0 4px oklch(60% 0.20 245 / 0.18);
+  }
+
+  /* 进度条刻度 */
+  .hud-progress .tick {
+    position: absolute;
+    top: -2px;
+    width: 1px;
+    height: 5px;
+    background: var(--hairline-strong);
+  }
+  .hud-progress .tick:nth-child(1) { left: 25%; }
+  .hud-progress .tick:nth-child(2) { left: 50%; }
+  .hud-progress .tick:nth-child(3) { left: 75%; }
+
+  .hud-hint {
+    display: flex;
+    gap: 22px;
+  }
+  .hud-hint span {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .hud-hint kbd {
+    display: inline-block;
+    padding: 2px 7px;
+    border: 1px solid var(--hairline-strong);
+    border-radius: 3px;
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    color: var(--ink);
+    text-transform: none;
+    letter-spacing: 0;
+    background: var(--surface);
+  }
+
+  /* ==== 自适应 ==== */
+  @media (max-height: 780px) {
+    :root { --card-h: 400px; --detail-h: 200px; }
+  }
+  @media (max-height: 660px) {
+    :root { --card-h: 360px; --detail-h: 180px; --header-h: 60px; }
+    .detail-title { font-size: 24px; }
+  }
+  @media (max-width: 1100px) {
+    :root { --card-w: 280px; --card-gap: 24px; }
+    .masthead, .hud { padding: 0 24px; }
+    .detail { padding: 20px 24px 16px; gap: 22px; }
+  }
+
+  /* ==== 进场动画 ==== */
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .masthead, .carousel, .detail, .hud {
+    animation: rise 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+  .carousel { animation-delay: 0.05s; }
+  .detail   { animation-delay: 0.15s; }
+  .hud      { animation-delay: 0.22s; }
+</style>
+<style data-od-tweaks-bridge-style="">
+[data-od-tweaks-hidden] .tw-panel {
+  transform: translateX(calc(100% + 32px)) !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+.tw-restore { display: none !important; }
+</style><script data-od-tweaks-bridge="">(function(){
+  // Synchronously hide BEFORE the artifact body parses so the panel never
+  // flashes on initial paint. The host removes the attribute via postMessage
+  // once it knows the desired state.
+  document.documentElement.setAttribute('data-od-tweaks-hidden', '');
+
+  var suppressEcho = false;
+  var observer = null;
+
+  function panelEl(){ return document.querySelector('.tw-panel'); }
+
+  function applyClassesToPanel(visible){
+    var panel = panelEl();
+    if (panel) panel.classList.toggle('tw-hidden', !visible);
+  }
+
+  function setPanelVisible(visible){
+    suppressEcho = true;
+    document.documentElement.toggleAttribute('data-od-tweaks-hidden', !visible);
+    applyClassesToPanel(visible);
+    // Clear flag after the MutationObserver has had a chance to fire for this
+    // change so we don't echo our own host-driven toggles back to the host.
+    Promise.resolve().then(function(){ suppressEcho = false; });
+  }
+
+  function postState(){
+    var panel = panelEl();
+    if (!panel) return;
+    try {
+      parent.postMessage({
+        type: 'od:tweaks-panel-state',
+        visible: !panel.classList.contains('tw-hidden'),
+      }, '*');
+    } catch (e) {}
+  }
+
+  function postAvailability(){
+    try {
+      parent.postMessage({
+        type: 'od:tweaks-available',
+        available: !!panelEl(),
+      }, '*');
+    } catch (e) {}
+  }
+
+  function attachObserver(){
+    var panel = panelEl();
+    if (!panel || observer) return;
+    observer = new MutationObserver(function(){
+      if (suppressEcho) return;
+      postState();
+    });
+    observer.observe(panel, { attributes: true, attributeFilter: ['class'] });
+  }
+
+  function onReady(){
+    // Capture the panel authored visibility BEFORE we apply the host hidden
+    // attribute. The bridge sets data-od-tweaks-hidden synchronously in head
+    // (before the body parses), so on entry to onReady the attribute is
+    // always present even though the artifact may have authored the panel
+    // as default-visible. Reading the panel class first is the only place
+    // we can still observe the author intent. Then drive the attribute,
+    // classes, and posted state from that captured value so a default
+    // visible tw-panel reports visible:true and the toolbar toggle starts
+    // ON. Issue surfaced in PR #1643 review.
+    var panel = panelEl();
+    var initialVisible = !!panel && !panel.classList.contains('tw-hidden');
+    document.documentElement.toggleAttribute('data-od-tweaks-hidden', !initialVisible);
+    applyClassesToPanel(initialVisible);
+    attachObserver();
+    postAvailability();
+    // Post the captured initial visibility so the toolbar toggle reflects
+    // the default state on mount. Without this the toggle reads OFF while
+    // a default-visible tw-panel artifact clearly shows its panel and the
+    // user would have to click toggle-on then toggle-off to actually hide.
+    postState();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', onReady);
+  } else {
+    onReady();
+  }
+
+  window.addEventListener('message', function(ev){
+    if (!ev.data || ev.data.type !== 'od:tweaks-panel-visible') return;
+    setPanelVisible(!!ev.data.visible);
+  });
+})();</script></head>
+<body>
+
+  <header class="masthead" data-od-id="path-0">
+    <div class="brand" data-od-id="path-0-0">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span class="brand-name">Atelier</span>
+      <span class="brand-tag">课程目录 / Catalogue</span>
+    </div>
+    <div class="masthead-meta" data-od-id="path-0-1">
+      <span class="item"><span class="live-dot"></span>2026 春季 · 学期 4</span>
+      <span class="item">共 <strong>10</strong> 门课程</span>
+      <span class="item">视觉研究学院</span>
+    </div>
+  </header>
+
+  <main class="stage" data-od-id="path-1">
+    <div class="carousel" id="carousel" data-od-id="path-1-0">
+      <div class="center-axis" aria-hidden="true" data-od-id="path-1-0-0"></div>
+      <div class="track" id="track" role="list" data-od-id="path-1-0-1"></div>
+    </div>
+
+    <section class="detail" id="detail" aria-live="polite" data-od-id="path-1-1"></section>
+  </main>
+
+  <footer class="hud" data-od-id="path-2">
+    <div class="hud-counter" data-od-id="path-2-0">
+      <span class="num" id="counter-cur" data-od-id="path-2-0-0">05</span>
+      <span class="total">/ <span id="counter-total" data-od-id="path-2-0-1-0">10</span></span>
+      <span class="hud-progress" id="progress" data-od-id="path-2-0-2">
+        <span class="tick"></span>
+        <span class="tick"></span>
+        <span class="tick"></span>
+      </span>
+    </div>
+    <div class="hud-hint" data-od-id="path-2-1">
+      <span><kbd>滚轮</kbd>浏览</span>
+      <span><kbd>←</kbd> <kbd>→</kbd>切换</span>
+      <span><kbd>点击</kbd>选中</span>
+    </div>
+  </footer>
+
+<script>
+(() => {
+  'use strict';
+
+  // ---------- 10 门艺术 / 设计课程 ----------
+  const marks = {
+    circle:  '<svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="13.5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>',
+    square:  '<svg viewBox="0 0 32 32"><rect x="3" y="3" width="26" height="26" fill="currentColor"/></svg>',
+    line:    '<svg viewBox="0 0 32 32"><line x1="16" y1="2" x2="16" y2="30" stroke="currentColor" stroke-width="2"/></svg>',
+    dots:    '<svg viewBox="0 0 32 32">' +
+               '<circle cx="6" cy="6" r="1.8" fill="currentColor"/>' +
+               '<circle cx="16" cy="6" r="1.8" fill="currentColor"/>' +
+               '<circle cx="26" cy="6" r="1.8" fill="currentColor"/>' +
+               '<circle cx="6" cy="16" r="1.8" fill="currentColor"/>' +
+               '<circle cx="16" cy="16" r="1.8" fill="currentColor"/>' +
+               '<circle cx="26" cy="16" r="1.8" fill="currentColor"/>' +
+               '<circle cx="6" cy="26" r="1.8" fill="currentColor"/>' +
+               '<circle cx="16" cy="26" r="1.8" fill="currentColor"/>' +
+               '<circle cx="26" cy="26" r="1.8" fill="currentColor"/>' +
+             '</svg>',
+    plus:    '<svg viewBox="0 0 32 32">' +
+               '<line x1="3" y1="16" x2="29" y2="16" stroke="currentColor" stroke-width="2"/>' +
+               '<line x1="16" y1="3" x2="16" y2="29" stroke="currentColor" stroke-width="2"/>' +
+             '</svg>',
+    rings:   '<svg viewBox="0 0 32 32">' +
+               '<circle cx="16" cy="16" r="13.5" fill="none" stroke="currentColor" stroke-width="1.5"/>' +
+               '<circle cx="16" cy="16" r="7" fill="none" stroke="currentColor" stroke-width="1.5"/>' +
+             '</svg>',
+    zigzag:  '<svg viewBox="0 0 32 32"><polyline points="2,22 8,10 14,22 20,10 26,22 30,14" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="miter" stroke-linecap="square"/></svg>',
+    lens:    '<svg viewBox="0 0 32 32">' +
+               '<circle cx="16" cy="16" r="13.5" fill="none" stroke="currentColor" stroke-width="1.5"/>' +
+               '<line x1="5" y1="5" x2="27" y2="27" stroke="currentColor" stroke-width="1.5"/>' +
+             '</svg>',
+    tri:     '<svg viewBox="0 0 32 32"><polygon points="16,3 30,29 2,29" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>',
+    frame:   '<svg viewBox="0 0 32 32"><rect x="3" y="3" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>'
+  };
+
+  const courses = [
+    {
+      num: "01", code: "ART-101", cat: "美术基础",
+      title: "色彩与光线", sub: "颜料、感知，与看见的物理学。",
+      instructor: "Maria Sobel", weeks: "12 周", schedule: "周二 · 周四 10:00",
+      color: "oklch(22% 0.04 250)",     fg: "oklch(98% 0.005 240)",
+      coverGrid: "rgba(255,255,255,0.05)",
+      mark: "circle",
+      description: "研究光如何成为物质。十二周内从原料颜料出发，构建一份属于个人的色板；通过小尺度的练习，体会相邻色之间的相互作用、温度、明度，以及单一色彩所承载的情绪重量。",
+      format: "工作室 + 评图", size: "12 人", prereq: "无"
+    },
+    {
+      num: "02", code: "ART-110", cat: "字体排印",
+      title: "字体设计 I", sub: "字形、解剖，与阅读的形状。",
+      instructor: "Joon-ho Park", weeks: "14 周", schedule: "周一 · 周三 14:00",
+      color: "oklch(98% 0.005 240)",    fg: "oklch(22% 0.04 250)",
+      coverGrid: "rgba(20,30,80,0.06)",
+      mark: "square",
+      description: "从书法的笔画到数字曲线。我们追溯字形如何被绘制、分类与组合，构建一套可终身使用的字体词汇——counter、轴线、terminal、字重——它会陪你走完之后的整个设计生涯。",
+      format: "授课 + 工作坊", size: "16 人", prereq: "无"
+    },
+    {
+      num: "03", code: "ART-120", cat: "工作室",
+      title: "素描工作室", sub: "观察、下笔，与一笔一画的重量。",
+      instructor: "Aïda Diallo", weeks: "12 周", schedule: "周二 09:00 – 13:00",
+      color: "oklch(95% 0.008 80)",     fg: "oklch(22% 0.04 250)",
+      coverGrid: "rgba(20,30,80,0.05)",
+      mark: "line",
+      description: "十二周专注于仔细观察，并坚定地把痕迹留在纸上。通过持续的观察性素描，训练一只能在精确与姿态、准确与创造之间自由切换的手。所有年级开放。",
+      format: "工作室", size: "14 人", prereq: "无"
+    },
+    {
+      num: "04", code: "ART-201", cat: "代码作为媒介",
+      title: "生成系统", sub: "算法即材料，规则即构图。",
+      instructor: "林维 Lin Wei", weeks: "10 周", schedule: "周四 16:00 – 19:00",
+      color: "oklch(50% 0.20 260)",     fg: "oklch(98% 0.005 240)",
+      coverGrid: "rgba(255,255,255,0.05)",
+      mark: "dots",
+      description: "把计算作为一种创作材料来理解。我们用简单的规则、参数与随机性，生成那些只能存在于该系统之内的绘画、动画与印刷品。不要求任何编程基础。",
+      format: "实验室 + 评图", size: "12 人", prereq: "字体设计 I（建议）"
+    },
+    {
+      num: "05", code: "ART-205", cat: "编辑设计",
+      title: "编辑设计", sub: "页面、网格，与长篇阅读的体验。",
+      instructor: "Rafael Crespo", weeks: "14 周", schedule: "周一 · 周三 10:00",
+      color: "oklch(20% 0.02 250)",     fg: "oklch(98% 0.005 240)",
+      coverGrid: "rgba(255,255,255,0.05)",
+      mark: "plus",
+      description: "长篇阅读的体验——从一页到两百页。研究网格、层级、图文关系，以及让内容成为一次完整阅读事件的编辑逻辑。学期项目：自主设计一本 48 页的期刊。",
+      format: "工作室 + 工作坊", size: "14 人", prereq: "字体设计 I"
+    },
+    {
+      num: "06", code: "ART-210", cat: "品牌设计",
+      title: "视觉识别系统", sub: "标志、逻辑，与品牌如何积累意义。",
+      instructor: "Noa Bergmann", weeks: "12 周", schedule: "周二 · 周四 14:00",
+      color: "oklch(70% 0.14 210)",     fg: "oklch(20% 0.04 250)",
+      coverGrid: "rgba(20,30,80,0.06)",
+      mark: "rings",
+      description: "标志是最小单位，系统才是纪律。我们从一笔手势出发，推演出让它在不同年份、不同介质、不同文化语境中都可识别的组件、应用与行为规范。",
+      format: "工作室", size: "14 人", prereq: "字体设计 I"
+    },
+    {
+      num: "07", code: "ART-220", cat: "动态设计",
+      title: "动态与时间", sub: "帧、序列，与注意力的编排。",
+      instructor: "Kenji Tanaka", weeks: "10 周", schedule: "周五 10:00 – 14:00",
+      color: "oklch(40% 0.10 195)",     fg: "oklch(98% 0.005 240)",
+      coverGrid: "rgba(255,255,255,0.05)",
+      mark: "zigzag",
+      description: "把动态当作第一性的设计材料。每周放映、动态字体练习与短片制作，逐步建立对节奏、缓动与注意力编排的工作直觉。",
+      format: "工作室 + 放映", size: "12 人", prereq: "字体设计 I"
+    },
+    {
+      num: "08", code: "ART-230", cat: "摄影",
+      title: "摄影", sub: "光、镜头，与凝视的训练。",
+      instructor: "Sofia Bauer", weeks: "12 周", schedule: "周三 13:00 – 17:00",
+      color: "oklch(28% 0.02 250)",     fg: "oklch(98% 0.005 240)",
+      coverGrid: "rgba(255,255,255,0.05)",
+      mark: "lens",
+      description: "六周自然光，六周控制光。我们共同朝着一份个人图像档案推进，最终编辑出二十张彼此呼应、能作为一个整体而成立的影像序列。",
+      format: "工作室 + 外拍", size: "12 人", prereq: "无"
+    },
+    {
+      num: "09", code: "ART-240", cat: "印刷工艺",
+      title: "印刷与纸张", sub: "Risograph、活字，与作为物体的页面。",
+      instructor: "Yusuf Aydın", weeks: "10 周", schedule: "周六 11:00 – 15:00",
+      color: "oklch(45% 0.16 320)",     fg: "oklch(98% 0.005 240)",
+      coverGrid: "rgba(255,255,255,0.05)",
+      mark: "tri",
+      description: "回到物质化的页面。在学院印刷工坊使用 Risograph、活字与丝网。我们将完成一系列限量印刷作品，亲手学习对色套印，并研究纸张、油墨与压力如何改变一幅图像的含义。",
+      format: "印刷工坊", size: "10 人", prereq: "无"
+    },
+    {
+      num: "10", code: "ART-250", cat: "策展研究",
+      title: "策展实践", sub: "选择、顺序，与公开展览。",
+      instructor: "Iris Lambert", weeks: "14 周", schedule: "周一 16:00 – 19:00",
+      color: "oklch(96% 0.012 240)",    fg: "oklch(22% 0.04 250)",
+      coverGrid: "rgba(20,30,80,0.06)",
+      mark: "frame",
+      description: "一场展览如何发生：提案、清单、悬挂、公开展示。我们走访在岗策展人，为一场假想展览撰写策展陈述，并以学期项目形式完成一次小型群展的落地。",
+      format: "研讨 + 实地", size: "12 人", prereq: "任一门 200 级工作室课程"
+    }
+  ];
+
+  const track      = document.getElementById('track');
+  const carousel   = document.getElementById('carousel');
+  const detailEl   = document.getElementById('detail');
+  const counterCur = document.getElementById('counter-cur');
+  const counterTot = document.getElementById('counter-total');
+  const progress   = document.getElementById('progress');
+
+  const cardW      = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--card-w'));
+  const cardGap    = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--card-gap'));
+  const STRIDE     = cardW + cardGap;
+  const N          = courses.length;
+  const MAX_SCROLL = (N - 1) * STRIDE;
+  const DEFAULT_IDX = 4;
+  const PROGRESS_W = 220;
+
+  function renderCards() {
+    track.innerHTML = courses.map((c, i) => `
+      <article class="card" data-index="${i}" role="listitem" tabindex="0" aria-label="${c.title}, ${c.code}">
+        <span class="card-corner tl"></span>
+        <span class="card-corner tr"></span>
+        <span class="card-corner bl"></span>
+        <span class="card-corner br"></span>
+        <div class="card-cover" style="background:${c.color}; --cover-grid:${c.coverGrid};">
+          <div class="card-num">${c.num}</div>
+          <div class="card-mark" style="color:${c.fg};">${marks[c.mark]}</div>
+          <div class="card-meta-cover">
+            <span>${c.code}</span>
+            <span>${c.cat}</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <div>
+            <div class="card-title">${c.title}</div>
+            <div class="card-sub">${c.sub}</div>
+          </div>
+          <div class="card-foot">
+            <div class="card-instructor">
+              ${c.instructor}
+              <span class="weeks">${c.weeks} · ${c.schedule}</span>
+            </div>
+            <span class="card-arrow">›</span>
+          </div>
+        </div>
+      </article>
+    `).join('');
+  }
+
+  function renderDetail(c) {
+    detailEl.innerHTML = `
+      <div class="detail-col">
+        <div class="kicker">课程</div>
+        <div class="code-block"><span class="num">${c.num}</span>  ${c.code}</div>
+        <div class="cat-block">${c.cat}</div>
+        <div class="weeks-block">${c.weeks}  ·  ${c.schedule}</div>
+      </div>
+      <div class="detail-col">
+        <div class="kicker">概览</div>
+        <div class="detail-title">${c.title}</div>
+        <p class="detail-body">${c.description}</p>
+      </div>
+      <div class="detail-col">
+        <div class="kicker">信息</div>
+        <dl class="dl">
+          <dt>形式</dt><dd>${c.format}</dd>
+          <dt>人数</dt><dd>${c.size}</dd>
+          <dt>先修</dt><dd>${c.prereq}</dd>
+          <dt>导师</dt><dd>${c.instructor}</dd>
+        </dl>
+      </div>
+    `;
+  }
+
+  let currentX = -DEFAULT_IDX * STRIDE;
+  let targetX  = -DEFAULT_IDX * STRIDE;
+  let activeIdx = DEFAULT_IDX;
+  const cards = [];
+
+  function init() {
+    renderCards();
+    const cardEls = track.querySelectorAll('.card');
+    cardEls.forEach((el, i) => {
+      el.addEventListener('click', () => goTo(i));
+      el.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); goTo(i); }
+      });
+      cards.push(el);
+    });
+    counterTot.textContent = String(N).padStart(2, '0');
+    setActive(DEFAULT_IDX, true);
+    track.style.transform = `translate3d(${currentX}px, 0, 0)`;
+    requestAnimationFrame(loop);
+  }
+
+  function goTo(i) {
+    const idx = Math.max(0, Math.min(N - 1, i));
+    targetX = -idx * STRIDE;
+  }
+
+  function step(dir) {
+    goTo(activeIdx + dir);
+  }
+
+  function setActive(idx, immediate) {
+    activeIdx = idx;
+    cards.forEach((c, i) => {
+      c.classList.toggle('active', i === idx);
+      c.classList.toggle('adjacent', Math.abs(i - idx) === 1);
+    });
+    counterCur.textContent = String(idx + 1).padStart(2, '0');
+    const t = (-currentX) / MAX_SCROLL;
+    progress.style.setProperty('--progress', (t * (PROGRESS_W - 8)) + 'px');
+    if (immediate) {
+      renderDetail(courses[idx]);
+    } else {
+      detailEl.classList.add('flash');
+      setTimeout(() => {
+        renderDetail(courses[idx]);
+        detailEl.classList.remove('flash');
+      }, 140);
+    }
+  }
+
+  function loop() {
+    const k = 0.14;
+    currentX += (targetX - currentX) * k;
+
+    track.style.transform = `translate3d(${currentX}px, 0, 0)`;
+
+    const idx = Math.round(-currentX / STRIDE);
+    const clamped = Math.max(0, Math.min(N - 1, idx));
+    if (clamped !== activeIdx) setActive(clamped, false);
+
+    const t = Math.max(0, Math.min(1, (-currentX) / MAX_SCROLL));
+    progress.style.setProperty('--progress', (t * (PROGRESS_W - 8)) + 'px');
+
+    requestAnimationFrame(loop);
+  }
+
+  let wheelTimer = null;
+  carousel.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    const primary = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+    const scaled = primary * 1.15;
+    targetX = Math.max(-MAX_SCROLL, Math.min(0, targetX - scaled));
+
+    if (wheelTimer) clearTimeout(wheelTimer);
+    wheelTimer = setTimeout(() => {
+      const nearest = Math.round(-targetX / STRIDE);
+      const c = Math.max(0, Math.min(N - 1, nearest));
+      targetX = -c * STRIDE;
+    }, 180);
+  }, { passive: false });
+
+  window.addEventListener('keydown', (e) => {
+    if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable)) return;
+    if (e.key === 'ArrowRight') { e.preventDefault(); step(1); }
+    else if (e.key === 'ArrowLeft')  { e.preventDefault(); step(-1); }
+    else if (e.key === 'Home')       { e.preventDefault(); goTo(0); }
+    else if (e.key === 'End')        { e.preventDefault(); goTo(N - 1); }
+  });
+
+  let dragStart = null;
+  let startX = 0;
+  track.addEventListener('pointerdown', (e) => {
+    dragStart = e.clientX;
+    startX = currentX;
+    track.setPointerCapture(e.pointerId);
+  });
+  track.addEventListener('pointermove', (e) => {
+    if (dragStart == null) return;
+    const dx = e.clientX - dragStart;
+    targetX = Math.max(-MAX_SCROLL, Math.min(0, startX + dx));
+  });
+  track.addEventListener('pointerup', (e) => {
+    if (dragStart == null) return;
+    dragStart = null;
+    const nearest = Math.round(-targetX / STRIDE);
+    const c = Math.max(0, Math.min(N - 1, nearest));
+    targetX = -c * STRIDE;
+    track.releasePointerCapture(e.pointerId);
+  });
+  track.addEventListener('pointercancel', () => { dragStart = null; });
+
+  window.addEventListener('resize', () => {
+    targetX = -activeIdx * STRIDE;
+  });
+
+  init();
+})();
+</script>
+
+
+<script data-od-snapshot-bridge="">(function(){
+  function copyComputedStyle(source, target){
+    if (!source || !target || source.nodeType !== 1 || target.nodeType !== 1) return;
+    var computed = window.getComputedStyle(source);
+    var style = target.getAttribute('style') || '';
+    for (var i = 0; i < computed.length; i++){
+      var prop = computed[i];
+      style += prop + ':' + computed.getPropertyValue(prop) + ';';
+    }
+    target.setAttribute('style', style);
+  }
+  function syncElementState(source, target){
+    var tag = source.tagName ? source.tagName.toLowerCase() : '';
+    if (tag === 'img' && source.currentSrc) target.setAttribute('src', source.currentSrc);
+    if (tag === 'input' || tag === 'textarea') target.setAttribute('value', source.value || '');
+    if (tag === 'canvas') {
+      try {
+        var img = document.createElement('img');
+        img.setAttribute('src', source.toDataURL('image/png'));
+        img.setAttribute('style', target.getAttribute('style') || '');
+        target.parentNode && target.parentNode.replaceChild(img, target);
+      } catch (_) {}
+    }
+  }
+  function inlineSnapshotStyles(originalRoot, cloneRoot){
+    copyComputedStyle(originalRoot, cloneRoot);
+    syncElementState(originalRoot, cloneRoot);
+    var originals = originalRoot.querySelectorAll('*');
+    var clones = cloneRoot.querySelectorAll('*');
+    var count = Math.min(originals.length, clones.length);
+    for (var i = 0; i < count; i++){
+      copyComputedStyle(originals[i], clones[i]);
+      syncElementState(originals[i], clones[i]);
+    }
+    var scripts = cloneRoot.querySelectorAll('script');
+    for (var s = scripts.length - 1; s >= 0; s--) scripts[s].remove();
+  }
+  function waitForImages(){
+    var imgs = Array.prototype.slice.call(document.images || []);
+    return Promise.all(imgs.map(function(img){
+      if (img.complete) return Promise.resolve();
+      return new Promise(function(resolve){
+        img.addEventListener('load', resolve, { once: true });
+        img.addEventListener('error', resolve, { once: true });
+      });
+    }));
+  }
+  function renderSnapshot(id){
+    var w = Math.max(1, window.innerWidth || document.documentElement.clientWidth || 1);
+    var h = Math.max(1, window.innerHeight || document.documentElement.clientHeight || 1);
+    var dpr = window.devicePixelRatio || 1;
+    var docW = Math.max(w, document.documentElement.scrollWidth || 0, document.body ? document.body.scrollWidth : 0);
+    var docH = Math.max(h, document.documentElement.scrollHeight || 0, document.body ? document.body.scrollHeight : 0);
+    var clone = document.documentElement.cloneNode(true);
+    clone.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
+    inlineSnapshotStyles(document.documentElement, clone);
+    var serializer = new XMLSerializer();
+    var html = serializer.serializeToString(clone);
+    var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '">' +
+      '<foreignObject x="' + (-window.scrollX || 0) + '" y="' + (-window.scrollY || 0) + '" width="' + docW + '" height="' + docH + '">' +
+      html +
+      '</foreignObject></svg>';
+    var img = new Image();
+    img.onload = function(){
+      try {
+        var canvas = document.createElement('canvas');
+        canvas.width = Math.max(1, Math.floor(w * dpr));
+        canvas.height = Math.max(1, Math.floor(h * dpr));
+        var ctx = canvas.getContext('2d');
+        if (!ctx) throw new Error('no 2d context');
+        ctx.scale(dpr, dpr);
+        ctx.drawImage(img, 0, 0, w, h);
+        window.parent.postMessage({ type: 'od:snapshot:result', id: id, dataUrl: canvas.toDataURL('image/png'), w: canvas.width, h: canvas.height }, '*');
+      } catch (err) {
+        window.parent.postMessage({ type: 'od:snapshot:result', id: id, error: String(err && err.message || err) }, '*');
+      }
+    };
+    img.onerror = function(){
+      window.parent.postMessage({ type: 'od:snapshot:result', id: id, error: 'snapshot image failed' }, '*');
+    };
+    img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+  }
+  window.addEventListener('message', function(ev){
+    var data = ev && ev.data;
+    if (!data || data.type !== 'od:snapshot' || !data.id) return;
+    waitForImages().then(function(){ renderSnapshot(String(data.id)); });
+  });
+})();</script><script data-od-srcdoc-transport-activation="">(function(){
+  window.addEventListener('message', function(ev){
+    var data = ev && ev.data;
+    if (!data || data.type !== 'od:srcdoc-transport-activate' || typeof data.html !== 'string') return;
+    document.open();
+    document.write(data.html);
+    document.close();
+  });
+})();</script></body></html>

@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "kind": "html",
+  "title": "screens/07-galaxy.html",
+  "entry": "screens/07-galaxy.html",
+  "renderer": "html",
+  "status": "complete",
+  "exports": [
+    "html",
+    "pdf",
+    "zip"
+  ],
+  "createdAt": "2026-06-11T04:10:54.157Z",
+  "updatedAt": "2026-06-11T04:10:54.157Z",
+  "metadata": {
+    "inferred": true,
+    "reconciled": true
+  }
+}

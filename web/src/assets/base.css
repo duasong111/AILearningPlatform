@@ -1,0 +1,172 @@
+/* ============================================================
+   AiTeach design tokens — clean light canvas, academic blue
+   Source: DESIGN-x.ai.md
+   ============================================================ */
+
+:root {
+  /* —— Surface —— */
+  --x-canvas: #FFFFFF;            /* page bg — clean white */
+  --x-canvas-soft: #F8FAFC;       /* slate-50, hover/tooltip */
+  --x-canvas-card: #FFFFFF;       /* card fill (white + hairline) */
+  --x-canvas-mid: #F1F5F9;        /* slate-100, nested surfaces */
+  --x-canvas-tint: #EFF6FF;       /* blue-50, brand-tinted surface */
+  --x-hairline: #E5E7EB;          /* gray-200, 1px dividers */
+  --x-hairline-strong: #CBD5E1;   /* slate-300, hover border */
+
+  /* —— Text —— */
+  --x-ink: #0F172A;               /* slate-900 primary text */
+  --x-ink-hover: #1E293B;         /* slate-800 */
+  --x-body: #475569;              /* slate-600 secondary body */
+  --x-body-mid: #64748B;          /* slate-500 captions / mute */
+  --x-mute: #94A3B8;              /* slate-400 disabled */
+
+  /* —— Brand / Primary —— */
+  --x-primary: #1E5AE0;           /* academic blue */
+  --x-primary-hover: #1A4DC4;     /* pressed filled CTA */
+  --x-primary-soft: #DBE7FF;      /* selected/active row tint */
+  --x-on-primary: #ffffff;
+
+  /* —— Accents —— */
+  --x-accent-blue: #1E5AE0;
+  --x-accent-blue-soft: #93C5FD;
+  --x-accent-blue-deep: #1E40AF;
+  --x-accent-amber: #F59E0B;      /* LIVE / NEW pulse */
+  --x-accent-amber-soft: #FCD34D;
+  --x-accent-amber-deep: #B45309; /* amber text on white */
+  --x-accent-violet: #7C3AED;     /* illustrative only */
+
+  /* —— Semantic (DESIGN-x.ai.md §Status) —— */
+  --x-success: #10B981;           /* oklch(62% 0.16 155) */
+  --x-success-soft: #D1FAE5;      /* oklch(94% 0.04 155) */
+  --x-warning: #F59E0B;           /* oklch(74% 0.14 80) */
+  --x-warning-soft: #FEF3C7;      /* oklch(95% 0.04 80) */
+  --x-danger: #DC2626;            /* oklch(58% 0.20 25) */
+  --x-danger-soft: #FEE2E2;       /* oklch(95% 0.04 25) */
+  --x-error: #DC2626;             /* alias: danger */
+  --x-error-soft: #FEE2E2;        /* alias: danger-soft */
+
+  /* —— AI accent (DESIGN-x.ai.md §AI) —— */
+  --x-ai: #7C3AED;                /* oklch(55% 0.20 280) indigo-violet */
+  --x-ai-soft: #EDE9FE;           /* oklch(92% 0.05 280) */
+
+  /* —— Translucent ink (the brand's outline border on light) —— */
+  --x-ink-alpha-06: rgba(15, 23, 42, 0.06);
+  --x-ink-alpha-15: rgba(15, 23, 42, 0.15);
+  --x-ink-alpha-30: rgba(15, 23, 42, 0.30);
+  --x-ink-alpha-45: rgba(15, 23, 42, 0.45);
+
+  /* —— Accent glows (used in hero radial gradients, card hover border) —— */
+  --x-amber-alpha-08: rgba(245, 158, 11, 0.08);
+  --x-amber-alpha-50: rgba(245, 158, 11, 0.50);
+  --x-blue-alpha-06: rgba(30, 90, 224, 0.06);
+  --x-blue-alpha-18: rgba(30, 90, 224, 0.18);
+  --x-blue-alpha-30: rgba(30, 90, 224, 0.30);
+
+  /* —— Strength bar levels (register form) —— */
+  --x-strength-1: #DC2626;
+  --x-strength-2: #F59E0B;
+  --x-strength-3: #FCD34D;
+  --x-strength-4: #10B981;
+
+  /* —— Spacing (4px base) —— */
+  --x-xxs: 2px;
+  --x-xs: 4px;
+  --x-sm: 8px;
+  --x-md: 12px;
+  --x-lg: 16px;
+  --x-xl: 24px;
+  --x-2xl: 32px;
+  --x-3xl: 48px;
+  --x-4xl: 64px;
+
+  /* —— Radius (DESIGN-x.ai.md: sm=6 md=10 lg=14 xl=20) —— */
+  --x-rounded-sm: 6px;
+  --x-rounded-md: 10px;
+  --x-rounded-lg: 14px;
+  --x-rounded-xl: 20px;
+  --x-rounded-pill: 9999px;
+
+  /* —— Fonts —— */
+  --x-font-display:
+    'Inter', system-ui, -apple-system, BlinkMacSystemFont,
+    'Segoe UI', Roboto, sans-serif;
+  --x-font-mono:
+    'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo,
+    Monaco, monospace;
+
+  /* —— Container —— */
+  --x-container: 1200px;
+
+  /* —— Shadows (floating UI + borderless cards) ——
+     NOTE: starting with ReportsView as the first batch. When applying
+     to a view, remove `border` and `box-shadow: var(--x-shadow-card)`
+     on the container, add `transition: box-shadow .2s, transform .2s`
+     and `&:hover { box-shadow: var(--x-shadow-card-hover);
+                   transform: translateY(-2px); }`.
+     Sub-elements (rows inside cards) should NOT inherit the shadow. */
+  --x-shadow-card:
+    0 2px 4px rgba(15, 23, 42, 0.06),
+    0 8px 24px rgba(15, 23, 42, 0.10);
+  --x-shadow-card-hover:
+    0 4px 8px rgba(15, 23, 42, 0.08),
+    0 16px 40px rgba(15, 23, 42, 0.14);
+  --x-shadow-toast: 0 4px 12px rgba(15, 23, 42, 0.08),
+                    0 1px 3px rgba(15, 23, 42, 0.04);
+  --x-shadow-modal: 0 12px 32px rgba(15, 23, 42, 0.10),
+                    0 2px 8px rgba(15, 23, 42, 0.05);
+  --x-shadow-popover: 0 8px 24px rgba(15, 23, 42, 0.08);
+}
+
+/* ============================================================
+   Reset + base body chrome (light-canvas only)
+   ============================================================ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-weight: 400;
+}
+
+html,
+body {
+  min-height: 100vh;
+  background: var(--x-canvas);
+  color: var(--x-ink);
+}
+
+body {
+  font-family: var(--x-font-display);
+  /* 用 --x-font-scale (由 main.css 的 html[data-fs] 注入) 缩放基准字号,
+     配合 SettingsView 等 view 内 --x-fs-* 元素的 calc 公式, 全站字号才会真随设置变化 */
+  font-size: calc(16px * var(--x-font-scale, 1));
+  line-height: 1.5;
+  letter-spacing: 0;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Light selection (ink on canvas-tint) */
+::selection {
+  background: var(--x-primary-soft);
+  color: var(--x-ink);
+}
+
+/* Light scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--x-canvas-soft);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--x-hairline);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--x-hairline-strong);
+}

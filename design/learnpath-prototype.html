@@ -1,0 +1,237 @@
+
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>学径 LearnPath — 原型总览</title>
+<link rel="stylesheet" href="css/tokens.css" />
+<style>
+  body { background: var(--bg); }
+  .launcher {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: var(--sp-12) var(--sp-6);
+  }
+
+  .launcher-header {
+    text-align: center;
+    margin-bottom: var(--sp-12);
+  }
+  .launcher-brand {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3);
+    justify-content: center;
+    margin-bottom: var(--sp-4);
+  }
+  .launcher-brand-icon {
+    width: 48px; height: 48px;
+    background: var(--primary);
+    border-radius: var(--r-md);
+    display: grid;
+    place-items: center;
+    color: white;
+    font-size: 24px;
+    font-weight: 700;
+    box-shadow: 0 6px 20px oklch(52% 0.18 255 / 0.25);
+  }
+  .launcher-brand-name {
+    font-family: var(--font-display);
+    font-size: var(--text-2xl);
+    font-weight: 700;
+  }
+  .launcher-title {
+    font-family: var(--font-display);
+    font-size: var(--text-xl);
+    color: var(--fg-secondary);
+    font-weight: 400;
+  }
+
+  .flow-section { margin-bottom: var(--sp-10); }
+  .flow-label {
+    font-size: var(--text-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin-bottom: var(--sp-4);
+    padding-bottom: var(--sp-2);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .screen-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--sp-4);
+  }
+
+  .screen-card {
+    display: flex;
+    flex-direction: column;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    overflow: hidden;
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.2s ease;
+  }
+  .screen-card:hover {
+    box-shadow: var(--shadow-lg);
+    border-color: var(--primary);
+    transform: translateY(-3px);
+    text-decoration: none;
+  }
+
+  .screen-preview {
+    height: 120px;
+    display: grid;
+    place-items: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .sp-onboard { background: linear-gradient(135deg, oklch(96% 0.01 240), var(--primary-light)); }
+  .sp-chat { background: linear-gradient(135deg, var(--ai-light), oklch(94% 0.04 280)); }
+  .sp-home { background: linear-gradient(135deg, oklch(97% 0.005 240), oklch(94% 0.01 240)); }
+  .sp-tutor { background: linear-gradient(135deg, oklch(96% 0.01 240), var(--ai-light)); }
+  .sp-planner { background: linear-gradient(135deg, var(--secondary-light), oklch(94% 0.04 168)); }
+  .sp-galaxy { background: linear-gradient(135deg, oklch(18% 0.02 250), oklch(25% 0.04 250)); }
+  .sp-practice { background: linear-gradient(135deg, var(--warning-light), oklch(94% 0.04 80)); }
+  .sp-studio { background: linear-gradient(135deg, var(--ai-light), oklch(90% 0.06 280)); }
+  .sp-assess { background: linear-gradient(135deg, var(--success-light), oklch(94% 0.04 155)); }
+  .sp-library { background: linear-gradient(135deg, oklch(96% 0.005 240), var(--primary-light)); }
+  .sp-dash { background: linear-gradient(135deg, oklch(97% 0.005 240), oklch(93% 0.01 240)); }
+
+  .screen-num {
+    position: absolute;
+    top: var(--sp-2);
+    left: var(--sp-3);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    font-family: var(--font-mono);
+  }
+  .sp-galaxy .screen-num { color: oklch(55% 0.01 240); }
+  .screen-preview-icon { font-size: 28px; opacity: 0.5; }
+  .sp-galaxy .screen-preview-icon { color: oklch(60% 0.01 240); }
+
+  .screen-info { padding: var(--sp-4); flex: 1; display: flex; flex-direction: column; gap: var(--sp-1); }
+  .screen-name { font-weight: 600; font-size: var(--text-base); color: var(--fg); }
+  .screen-desc { font-size: var(--text-xs); color: var(--muted); line-height: 1.5; }
+
+  .cta-section {
+    text-align: center;
+    padding: var(--sp-8) 0;
+    border-top: 1px solid var(--border);
+    margin-top: var(--sp-4);
+  }
+  .cta-text { font-size: var(--text-md); color: var(--fg-secondary); margin-bottom: var(--sp-4); }
+
+  .flow-connector {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+    justify-content: center;
+    margin: var(--sp-6) 0;
+    color: var(--muted);
+    font-size: var(--text-xs);
+  }
+  .flow-line { flex: 1; height: 1px; background: var(--border); max-width: 120px; }
+
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+  .anim-fade-up { animation: fadeUp 0.5s ease both; }
+  .anim-delay-1 { animation-delay: 0.1s; }
+  .anim-delay-2 { animation-delay: 0.2s; }
+  .anim-delay-3 { animation-delay: 0.3s; }
+  .anim-delay-4 { animation-delay: 0.4s; }
+
+  @media (max-width: 768px) { .screen-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 500px) { .screen-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+  <div class="launcher">
+    <div class="launcher-header anim-fade-up">
+      <div class="launcher-brand">
+        <div class="launcher-brand-icon">学</div>
+        <div class="launcher-brand-name">学径 LearnPath</div>
+      </div>
+      <div class="launcher-title">多模态多智能体个性化学习平台 · 原型总览</div>
+    </div>
+
+    <div class="flow-section anim-fade-up anim-delay-1">
+      <div class="flow-label">引导流程 · Onboarding</div>
+      <div class="screen-grid">
+        <a href="screens/01-welcome.html" class="screen-card">
+          <div class="screen-preview sp-onboard"><div class="screen-num">01</div><div class="screen-preview-icon">✦</div></div>
+          <div class="screen-info"><div class="screen-name">欢迎页</div><div class="screen-desc">品牌展示与平台介绍落地页</div></div>
+        </a>
+        <a href="screens/02-subject-select.html" class="screen-card">
+          <div class="screen-preview sp-onboard"><div class="screen-num">02</div><div class="screen-preview-icon">⊞</div></div>
+          <div class="screen-info"><div class="screen-name">学科选择</div><div class="screen-desc">选择 8 大学科领域的学习方向</div></div>
+        </a>
+        <a href="screens/03-profile-build.html" class="screen-card">
+          <div class="screen-preview sp-chat"><div class="screen-num">03</div><div class="screen-preview-icon">◈</div></div>
+          <div class="screen-info"><div class="screen-name">AI 画像构建</div><div class="screen-desc">多智能体对话式学习者画像采集</div></div>
+        </a>
+      </div>
+    </div>
+
+    <div class="flow-connector"><div class="flow-line"></div><span>画像完成 → 进入学习空间</span><div class="flow-line"></div></div>
+
+    <div class="flow-section anim-fade-up anim-delay-2">
+      <div class="flow-label">核心模块 · Core Modules</div>
+      <div class="screen-grid">
+        <a href="screens/04-home.html" class="screen-card">
+          <div class="screen-preview sp-home"><div class="screen-num">04</div><div class="screen-preview-icon">⌂</div></div>
+          <div class="screen-info"><div class="screen-name">学习空间主页</div><div class="screen-desc">模块导航、学习进度与最近动态</div></div>
+        </a>
+        <a href="screens/05-tutor.html" class="screen-card">
+          <div class="screen-preview sp-tutor"><div class="screen-num">05</div><div class="screen-preview-icon">💬</div></div>
+          <div class="screen-info"><div class="screen-name">AI Tutor 对话</div><div class="screen-desc">智能学习助手，多轮上下文辅导</div></div>
+        </a>
+        <a href="screens/06-planner.html" class="screen-card">
+          <div class="screen-preview sp-planner"><div class="screen-num">06</div><div class="screen-preview-icon">📅</div></div>
+          <div class="screen-info"><div class="screen-name">学习计划</div><div class="screen-desc">AI 生成的个性化学习路线图与任务</div></div>
+        </a>
+        <a href="screens/07-galaxy.html" class="screen-card">
+          <div class="screen-preview sp-galaxy"><div class="screen-num">07</div><div class="screen-preview-icon" style="color:oklch(72% 0.16 280)">✧</div></div>
+          <div class="screen-info"><div class="screen-name">知识星图</div><div class="screen-desc">暗色画布知识图谱可视化与学习导航</div></div>
+        </a>
+        <a href="screens/08-practice.html" class="screen-card">
+          <div class="screen-preview sp-practice"><div class="screen-num">08</div><div class="screen-preview-icon">📝</div></div>
+          <div class="screen-info"><div class="screen-name">刷题中心</div><div class="screen-desc">自适应练习、专项训练与错题归档</div></div>
+        </a>
+        <a href="screens/09-studio.html" class="screen-card">
+          <div class="screen-preview sp-studio"><div class="screen-num">09</div><div class="screen-preview-icon">⚡</div></div>
+          <div class="screen-info"><div class="screen-name">AI 教学工坊</div><div class="screen-desc">多模态教学资源自动生成中心</div></div>
+        </a>
+      </div>
+    </div>
+
+    <div class="flow-section anim-fade-up anim-delay-3">
+      <div class="flow-label">评估与数据 · Assessment &amp; Analytics</div>
+      <div class="screen-grid">
+        <a href="screens/10-assessment.html" class="screen-card">
+          <div class="screen-preview sp-assess"><div class="screen-num">10</div><div class="screen-preview-icon">✓</div></div>
+          <div class="screen-info"><div class="screen-name">评测系统</div><div class="screen-desc">能力评估、章节测验与认证考试</div></div>
+        </a>
+        <a href="screens/11-library.html" class="screen-card">
+          <div class="screen-preview sp-library"><div class="screen-num">11</div><div class="screen-preview-icon">📚</div></div>
+          <div class="screen-info"><div class="screen-name">学习书架</div><div class="screen-desc">个人知识库与学习资源统一管理</div></div>
+        </a>
+        <a href="screens/12-dashboard.html" class="screen-card">
+          <div class="screen-preview sp-dash"><div class="screen-num">12</div><div class="screen-preview-icon">📊</div></div>
+          <div class="screen-info"><div class="screen-name">数据看板</div><div class="screen-desc">学习数据可视化与能力成长分析</div></div>
+        </a>
+      </div>
+    </div>
+
+    <div class="cta-section anim-fade-up anim-delay-4">
+      <div class="cta-text">从欢迎页开始，体验完整的学习旅程</div>
+      <a href="screens/01-welcome.html" class="btn btn-primary btn-lg">开始体验 →</a>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,36 @@
+[
+  {
+    "url": "http://62.234.70.182:5001/files/e4f7e1dafd8744d2a2d4b2747431fd71.pdf",
+    "cover_url": "http://62.234.70.182:5001/api/files/ff1ba7fea134497cb6541a1530f09b4f/cover",
+    "title": "（待填写书名）",
+    "author": "（待填写作者）"
+  },
+  {
+    "url": "http://62.234.70.182:5001/files/269c5de4eccd4f5784e3ec57dd276cf7.pdf",
+    "cover_url": "http://62.234.70.182:5001/api/files/c9d644756ffe4d84b904f5cf0ff79b36/cover",
+    "title": "数据结构（C语言版 第2版）",
+    "author": "严蔚敏",
+    "chaptersTotal": 10
+  },
+  {
+    "url": "http://62.234.70.182:5001/files/61d9ff0c5a3c455baa39aff470e4a774.pdf",
+    "cover_url": "http://62.234.70.182:5001/api/files/6ed718cf81114a6aac55b501e7d4036d/cover",
+    "title": "操作系统概念（原书第9版）",
+    "author": "Silberschatz 等",
+    "chaptersTotal": 26
+  },
+  {
+    "url": "http://62.234.70.182:5001/files/104c504b5dde42c1a8da5f40fac6c956.pdf",
+    "cover_url": "http://62.234.70.182:5001/api/files/952e8b40cee241ea99a073de07c17828/cover",
+    "title": "数据库系统概论（第5版）",
+    "author": "王珊 / 萨师煊",
+    "chaptersTotal": 15
+  },
+  {
+    "url": "http://62.234.70.182:5001/files/3736f97616e7401d82e6ccb7f6d115cc.pdf",
+    "cover_url": "http://62.234.70.182:5001/api/files/22bff2ecefd44ca9a7dc4ff0761d0ef0/cover",
+    "title": "计算机网络",
+    "author": "谢希仁",
+    "chaptersTotal": 9
+  }
+]

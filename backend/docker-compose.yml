@@ -1,0 +1,61 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: aiteach-backend:latest
+    container_name: aiteach-web-new
+    volumes:
+      - .:/app
+    networks:
+      - 1panel-network
+    ports:
+      - "8000:8000"
+    environment:
+      - ENV_FILE=/app/.env.docker
+      - DJANGO_SETTINGS_MODULE=config.settings
+      - PYTHONIOENCODING=utf-8
+      - LANG=C.UTF-8
+      - LC_ALL=C.UTF-8
+      - REDIS_URL=redis://:<YOUR_REDIS_PASSWORD>@<YOUR_REDIS_HOST>:6379/0
+      - CELERY_BROKER_URL=redis://:<YOUR_REDIS_PASSWORD>@<YOUR_REDIS_HOST>:6379/0
+      - CELERY_RESULT_BACKEND=redis://:<YOUR_REDIS_PASSWORD>@<YOUR_REDIS_HOST>:6379/0
+      - CHANNEL_REDIS_URL=redis://:<YOUR_REDIS_PASSWORD>@<YOUR_REDIS_HOST>:6379/0
+    command: ./entrypoint.sh web
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request, urllib.error; req=urllib.request.Request('http://127.0.0.1:8000/api/auth/login/', data=b'{}', headers={'Content-Type':'application/json'}, method='POST'); r=urllib.request.urlopen(req, timeout=3); import sys; sys.exit(0 if r.status==400 else 1)\""]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+
+  celery:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: aiteach-backend:latest
+    container_name: aiteach-celery-new
+    volumes:
+      - .:/app
+    networks:
+      - 1panel-network
+    environment:
+      - ENV_FILE=/app/.env.docker
+      - DJANGO_SETTINGS_MODULE=config.settings
+      - PYTHONIOENCODING=utf-8
+      - LANG=C.UTF-8
+      - LC_ALL=C.UTF-8
+      - CELERY_BROKER_URL=redis://:<YOUR_REDIS_PASSWORD>@<YOUR_REDIS_HOST>:6379/0
+    command: ./entrypoint.sh celery
+    healthcheck:
+      test: ["CMD", "celery", "-A", "config", "inspect", "ping", "-t", "6"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+
+networks:
+  1panel-network:
+    external: true

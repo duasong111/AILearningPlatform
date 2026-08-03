@@ -1,0 +1,24 @@
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info
+dist
+build
+.env
+.env.local
+.git
+.gitignore
+README.md
+db.sqlite3
+# 2026-07-05 增: docker 容器外不需要进 image 的
+.venv312
+.DS_Store
+*.log
+.runtime/
+backend/.env.dev
+backend/.env.docker
+backend/.env
